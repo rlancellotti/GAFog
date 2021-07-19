@@ -1,7 +1,7 @@
 import random
 import numpy
 import math
-import funzioni
+import functions
 import datetime
 import matplotlib.pyplot as plt
 
@@ -16,7 +16,7 @@ fogN = 6        # numero di nodi fog presenti nel database
 sorN = 89       # numero di nodi sorgente presenti nel database
 muFog = []      # lista vuota che verrà riempita con le capacità di calcolo di ogni nodo fog
 lambdaSrc = []  # lista vuota che verrà riempita con i carichi di lavoro di ogni nodo sorgente
-MatriceDist = []# lista vuota che verrà rimempita con una matrice delle distanze tra i nodi sorgente e quelli fog
+DistMatrix = []# lista vuota che verrà rimempita con una matrice delle distanze tra i nodi sorgente e quelli fog
 NF = 0          #   numero di nodi da mantenere attivi
 sources = []
 fogs = []
@@ -44,10 +44,10 @@ def obj_func(individual1):
         individual[i] = individual1[sorN + individual1[i]]
     
     latency = 0
-    # lungh = len(muFog)
-    lungh = fogN
-    lambda_fog = [0] * lungh
-    time_fog = [0] * lungh
+    # length = len(muFog)
+    length = fogN
+    lambda_fog = [0] * length
+    time_fog = [0] * length
     for i in range(sorN):
         lambda_fog[individual[i]] += lambdaSrc[i]
     # num_nodi = funzioni.membriNodo(individual, lungh)
@@ -57,11 +57,7 @@ def obj_func(individual1):
         else:
             time_fog[i] = 1 / muFog[i] * 1 / (1 - maxrho)
     for i in range(sorN):
-        latency += (MatriceDist[i][individual[i]] + time_fog[individual[i]])
-        # if muFog[individual[i]] > (lambda_fog[individual[i]]):
-        #    latency += (MatriceDist[i][individual[i]] + 1 / (muFog[individual[i]] - lambda_fog[individual[i]]))
-        # else:
-        #    latency += MatriceDist[i][individual[i]] + (1 / muFog[individual[i]]) * 1 / (1 - maxrho)
+        latency += (DistMatrix[i][individual[i]] + time_fog[individual[i]])
     # valid = is_valid(individual)
     return latency,
 
@@ -85,17 +81,17 @@ def normalize_rit(val):
         r[2] = r[2] * val / avg
 '''Funzione che inizializza le variabili necessarie per il calcolo del fitness degli individui'''
 def init_problem(lam, mu, rho, K):
-    global MatriceDist,sources, fogs, rit, fogN, NF
+    global DistMatrix,sources, fogs, rit, fogN, NF
     #Apro la connessione al Data Base
-    conne = funzioni.start()
-    sources = funzioni.get_set(conne, "ID", "Source")
-    fogs = funzioni.get_set(conne, "ID", "Fog")
-    rit = funzioni.get_ritardi(conne, "Source", "Fog")
+    conne = functions.start()
+    sources = functions.get_set(conne, "ID", "Source")
+    fogs = functions.get_set(conne, "ID", "Fog")
+    rit = functions.get_ritardi(conne, "Source", "Fog")
 
     normalize_rit(16)
     delta = avg_rit()
 
-    MatriceDist = []
+    DistMatrix = []
     '''Assegno ad ogni nodo fog una capacità di calcolo 333 e a ogni nodo sogente
        un lavoro da svolgere di un job/s'''
     global muFog, lambdaSrc
@@ -112,7 +108,7 @@ def init_problem(lam, mu, rho, K):
         mp = []
         for j in range(len(muFog)):
             mp.append(rit[j + y][2])
-        MatriceDist.append(mp)
+        DistMatrix.append(mp)
         y += len(muFog)
 
     '''Calcolo il numero di nodi fog da avere attivi'''
@@ -123,7 +119,7 @@ def init_problem(lam, mu, rho, K):
         NF=int(NF)+1
     print(NF)
     #Chiudo la connessione al Data Base
-    funzioni.stop(conne)
+    functions.stop(conne)
 
 '''Ho modificato l'algoritmo mutUniformInt per adattarlo all'esigenza:
     in particolare distingue le due parti del genoma ed evita la generazione di doppioni nella seconda parte '''
