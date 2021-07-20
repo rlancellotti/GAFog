@@ -20,7 +20,7 @@ DistMatrix = []# lista vuota che verrà rimempita con una matrice delle distanze
 NF = 0          #   numero di nodi da mantenere attivi
 sources = []
 fogs = []
-rit = []
+delay = []
 maxrho = 0.999
 toolbox = base.Toolbox()
 
@@ -61,64 +61,58 @@ def obj_func(individual1):
     # valid = is_valid(individual)
     return latency,
 
-def avg_rit():
+def avg_delay():
     tot = 0
     n = 0
-    for r in rit:
+    for r in delay:
         tot += r[2]
         n += 1
     return (tot / n)
 
-def normalize_rit(val):
-    global rit
+def normalize_delay(val):
+    global delay
     tot = 0
     n = 0
-    for r in rit:
+    for r in delay:
         tot += r[2]
         n += 1
     avg = tot / n
-    for r in rit:
+    for r in delay:
         r[2] = r[2] * val / avg
+        
 '''Funzione che inizializza le variabili necessarie per il calcolo del fitness degli individui'''
 def init_problem(lam, mu, rho, K):
-    global DistMatrix,sources, fogs, rit, fogN, NF
+    global DistMatrix,sources, fogs, delay, fogN, NF, muFog, lambdaSrc
     #Apro la connessione al Data Base
     conne = functions.start("Tesi2.db")
     sources = functions.get_set(conne, "ID", "Source")
     fogs = functions.get_set(conne, "ID", "Fog")
-    rit = functions.get_delays(conne, "Source", "Fog")
-
-    normalize_rit(16)
-    delta = avg_rit()
-
+    delay = functions.get_delays(conne, "Source", "Fog")
+    normalize_delay(16)
+    delta = avg_delay()
     DistMatrix = []
-    '''Assegno ad ogni nodo fog una capacità di calcolo 333 e a ogni nodo sogente
-       un lavoro da svolgere di un job/s'''
-    global muFog, lambdaSrc
+    # initialize mufog and lambdaSrc
     muFog = []
     for i in fogs:
         muFog.append(mu)
     lambdaSrc = []
     for i in sources:
         lambdaSrc.append(lam)
-
-    ''' creo la matrice delle distanze utilizzando i ritardi ottenuti con get_ritardi'''
     y = 0
-    for i in range(int(len(rit) / len(muFog))):
+    for i in range(int(len(delay) / len(muFog))):
         mp = []
         for j in range(len(muFog)):
-            mp.append(rit[j + y][2])
+            mp.append(delay[j + y][2])
         DistMatrix.append(mp)
         y += len(muFog)
-
-    '''Calcolo il numero di nodi fog da avere attivi'''
+    # number of fog nodes to keep
     NF=(fogN*rho*K)/(K-1)
     if NF == int(NF):
         NF=int(NF)
     else:
         NF=int(NF)+1
     print(NF)
-    #Chiudo la connessione al Data Base
+    # close connection
     functions.stop(conne)
 
 '''Ho modificato l'algoritmo mutUniformInt per adattarlo all'esigenza:
@@ -161,9 +155,8 @@ def init_ga():
     toolbox.register("mutate", mutUniformfog, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=7)
 
-'''Funzione che grafica i dati passati come parametri'''
 def plot_data(x,y1,y2=None):
-    
+    # crate plots
     fig, ax1 = plt.subplots()
     line1 = ax1.plot(x, y1, "b-", label="Minimum Achieved")
     ax1.set_xlabel("Generation")
@@ -178,11 +171,12 @@ def plot_data(x,y1,y2=None):
         for tl in ax2.get_yticklabels():
             tl.set_color("r")
     plt.show()
-'''Funzione che avvia l'esecuzione dell'algoritmo genetico'''
+
+
 def solve_ga_Simple(cxbp,mutpb):
+    # GA solver
     global numPop, numGen
     pop = toolbox.population(n=numPop)
-
     # dico di salvare in hof il migliore (1) individuo mai esistito durante l'evoluzione
     hof = tools.HallOfFame(1)
     # inizializzo un Logbook che provvederà a salvare tutte le statistiche richieste https://deap.readthedocs.io/en/master/tutorials/basic/part3.html
@@ -192,21 +186,17 @@ def solve_ga_Simple(cxbp,mutpb):
     stats.register("std", numpy.std)
     stats.register("min", numpy.min)
     stats.register("max", numpy.max)
-
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
                                    stats=stats, halloffame=hof, verbose=True)
     print(hof)
-    
-    
     gen=log.select("gen")
     mins=log.select("min")
     stds=log.select("std")
-    
     plot_data(gen,mins,stds)
 
 
 def main():
-    global sources, fogs, rit, target
+    global sources, fogs, delay, target
     #random.seed(64)
     
     #decidere: 
