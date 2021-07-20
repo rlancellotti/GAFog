@@ -83,10 +83,10 @@ def normalize_rit(val):
 def init_problem(lam, mu, rho, K):
     global DistMatrix,sources, fogs, rit, fogN, NF
     #Apro la connessione al Data Base
-    conne = functions.start()
+    conne = functions.start("Tesi2.db")
     sources = functions.get_set(conne, "ID", "Source")
     fogs = functions.get_set(conne, "ID", "Fog")
-    rit = functions.get_ritardi(conne, "Source", "Fog")
+    rit = functions.get_delays(conne, "Source", "Fog")
 
     normalize_rit(16)
     delta = avg_rit()

@@ -3,17 +3,17 @@ import math
 
 ''' funione che conta quanti nodi sorgente sono collegati a ciascun nodo fog
     all'interno di un individuo'''
-def membriNodo(individual, lungh):
-    numeri=[0]*lungh
+def get_sources_for_fog(individual, length):
+    nSrc=[0]*length
     for i in individual:
-        numeri[(i)]+=1
-    return numeri
+        nSrc[(i)]+=1
+    return nSrc
 
 ''' Queste funzioni si connettono al database e prelevano i dati utili per
     utilizzare l'algoritmo genetico'''
 
-def start():
-    conn = sqlite3.connect("Tesi2.db")
+def start(dbname):
+    conn = sqlite3.connect(dbname)
     conn.create_function("dst", 4, dst)
     print('''connection succeded''')
     return conn
@@ -39,7 +39,7 @@ def get_linkset(conn, request, table1, table2):
     c.close()
     return _set
 
-def get_ritardi(conn, table1, table2):
+def get_delays(conn, table1, table2):
     c = conn.cursor()
     c.execute("""select s.ID, f.ID, dst(s.Longitudine,s.Latitudine,f.Longitudine,f.Latitudine)
                 from """+table1+""" s cross join """+table2+""" f""")
