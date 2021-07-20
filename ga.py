@@ -132,7 +132,7 @@ def mutUniformfog(individual, indpb):
     in particolare distingue le due parti del genoma ed evita la generazione di doppioni nella seconda parte'''
 def cxUniformFog(ind1,ind2,indpb):
     global NF, Nsrc, Nfog
-    size = min(len(ind1), len(ind2))
+    #size = min(len(ind1), len(ind2))
     for i in range(Nsrc):
         if random.random() < indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
@@ -159,7 +159,7 @@ def init_ga():
 def plot_data(x,y1,y2=None):
     # crate plots
     fig, ax1 = plt.subplots()
-    line1 = ax1.plot(x, y1, "b-", label="Minimum Achieved")
+    ax1.plot(x, y1, "b-", label="Minimum Achieved")
     ax1.set_xlabel("Generation")
     ax1.set_ylabel("Minimum", color="b")
     for tl in ax1.get_yticklabels():
@@ -167,14 +167,14 @@ def plot_data(x,y1,y2=None):
 
     if y2 != None:
         ax2 = ax1.twinx()
-        line2 = ax2.plot(x, y2, "r-", label="Standard Deviation")
+        ax2.plot(x, y2, "r-", label="Standard Deviation")
         ax2.set_ylabel("Deviation", color="r")
         for tl in ax2.get_yticklabels():
             tl.set_color("r")
     plt.show()
 
 
-def solve_ga_Simple(cxbp,mutpb):
+def solve_ga_simple(cxbp,mutpb):
     # GA solver
     global numPop, numGen
     pop = toolbox.population(n=numPop)
@@ -199,7 +199,7 @@ def solve_ga_Simple(cxbp,mutpb):
 
 
 def main():
-    global sources, fogs, delay, target
+    global sources, fogs, delay
     #random.seed(64)
     
     #decidere: 
@@ -213,7 +213,7 @@ def main():
     lam = (rho * mu * Nfog) / Nsrc
     init_problem(lam,mu,rho,K)
     init_ga()
-    solve_ga_Simple(cxbp,mutpb)
+    solve_ga_simple(cxbp,mutpb)
 
 if __name__ == "__main__":
     main()
