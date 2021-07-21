@@ -5,28 +5,82 @@ import math
 import functions
 import datetime
 import matplotlib.pyplot as plt
+from collections import namedtuple
 
 from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
 
+class Problem:
+    # nfog  number of fog nodes
+    # nsrc number of sources
+    # sources list of sources
+    # nf number of fog nodes to keep active
+    # fogs list of fog nodes
+    # mu_fog list of processing rates of fog nodes
+    # lambda_src list of arrival rates of sources
+    # distMatrix matrix of distances between source and fog nodes
+    def __init__(self, filename, mu, delta, rho, K):
+        """Initilization 
+        Parameters:
+            filename (string) db filename containing the topology
+            mu (float): processing rate (same for every server)
+            delta (float): average delay
+            rho (float): average system utilization
+            K (float): SLA multiplier -> Tsla=K/mu
+        """
+        conne = functions.start(filename)
+        self.sources = functions.get_set(conne, "ID", "Source")
+        self.nsrc=len(problem.sources)
+        self.fogs = functions.get_set(conne, "ID", "Fog")
+        self.nfog=len(problem.fogs)
+        delays = functions.get_delays(conne, "Source", "Fog")
+        functions.stop(conne)
+        normalize_delay(delays, delta)
+        self.dist_matrix = []
+        self.fogs
+        lam = (rho * mu * self.nfog) / self.nsrc
+        self.mufog = []
+        for i in self.fogs:
+            self.mu_fog.append(mu)
+        self.lambda_src = []
+        for i in self.sources:
+            self.lambda_src.append(lam)
+        y = 0
+        for i in range(int(len(delays) / len(self.mu_fog))):
+            mp = []
+            for j in range(len(self.mu_fog)):
+                mp.append(delays[j + y][2])
+            self.dist_matrix.append(mp)
+            y += len(self.mu_fog)
+        # number of fog nodes to keep
+        self.nf=(self.nfog*rho*K)/(K-1)
+        if self.nf == int(self.nf):
+            self.nf=int(self.nf)
+        else:
+            self.nf=int(self.nf)+1
+        print(self.nf)
+
+
+def init_problem(mu, delta, rho, K):
+    problem=Problem(None, None, None, None, None, None, None, None)
+    #global DistMatrix,sources, fogs, delay, Nfog, NF, muFog, lambdaSrc
+    #Apro la connessione al Data Base
+    # initialize mufog and lambdaSrc
+    return problem
+
+
+
+ 
+
 numGen = 500    # numero di generazioni percui continuare a fare evolevere la popolazione
 numPop = 200    # numero iniziale degli individui alla prima generazione
-Nfog = 6        # numero di nodi fog presenti nel database
-Nsrc = 89       # numero di nodi sorgente presenti nel database
-muFog = []      # lista vuota che verrà riempita con le capacità di calcolo di ogni nodo fog
-lambdaSrc = []  # lista vuota che verrà riempita con i carichi di lavoro di ogni nodo sorgente
-DistMatrix = []# lista vuota che verrà rimempita con una matrice delle distanze tra i nodi sorgente e quelli fog
-NF = 0          #   numero di nodi da mantenere attivi
-sources = []
-fogs = []
-delay = []
 maxrho = 0.999
-toolbox = base.Toolbox()
 
 
-def load_individuals(creator,nsens,nfog,nf):
+
+def load_individuals(creator, nsens, nfog, nf):
     individual = list()
     for i in range(nsens):
         individual.append(random.randint(0,nf-1))
@@ -38,113 +92,72 @@ def load_individuals(creator,nsens,nfog,nf):
     return creator(individual)
 
 def obj_func(individual1):
-    global maxrho, muFog, lambdaSrc, Nfog, Nsrc
-        
-    individual = [0]*Nsrc
-    for i in range(Nsrc):
-        individual[i] = individual1[Nsrc + individual1[i]]
+    global maxrho, problem
+    # individual1=[fog_mapping]+[source_mapping]
+    # fog mapping: fog_mapping[fog]=real_fog_ID
+    # source mapping: source_mapping[source]=individual_fog_ID
+    individual = [0]*problem.nsrc
+    for i in range(problem.nsrc):
+        individual[i] = individual1[problem.nsrc + individual1[i]]
     latency = 0
     # length = len(muFog)
-    length = Nfog
+    length = problem.nfog
     lambda_fog = [0] * length
     time_fog = [0] * length
-    for i in range(Nsrc):
-        lambda_fog[individual[i]] += lambdaSrc[i]
+    for i in range(problem.nsrc):
+        lambda_fog[individual[i]] += problem.lambdaSrc[i]
     # num_nodi = funzioni.membriNodo(individual, lungh)
-    for i in range(Nfog):
-        if muFog[i] > lambda_fog[i]:
-            time_fog[i] = 1 / (muFog[i] - lambda_fog[i])
+    for i in range(problem.nsrc):
+        if problem.muFog[i] > lambda_fog[i]:
+            time_fog[i] = 1 / (problem.muFog[i] - lambda_fog[i])
         else:
-            time_fog[i] = 1 / muFog[i] * 1 / (1 - maxrho)
-    for i in range(Nsrc):
-        latency += (DistMatrix[i][individual[i]] + time_fog[individual[i]])
+            time_fog[i] = 1 / problem.muFog[i] * 1 / (1 - maxrho)
+    for i in range(problem.nsrc):
+        latency += (problem.distMatrix[i][individual[i]] + time_fog[individual[i]])
     # valid = is_valid(individual)
     return latency,
 
-def avg_delay():
+def normalize_delay(delays, newavg):
     tot = 0
     n = 0
-    for r in delay:
-        tot += r[2]
-        n += 1
-    return (tot / n)
-
-def normalize_delay(val):
-    global delay
-    tot = 0
-    n = 0
-    for r in delay:
+    for r in delays:
         tot += r[2]
         n += 1
     avg = tot / n
-    for r in delay:
-        r[2] = r[2] * val / avg
+    for r in delays:
+        r[2] = r[2] * newavg / avg
         
-'''Funzione che inizializza le variabili necessarie per il calcolo del fitness degli individui'''
-def init_problem(lam, mu, rho, K):
-    global DistMatrix,sources, fogs, delay, Nfog, NF, muFog, lambdaSrc
-    #Apro la connessione al Data Base
-    conne = functions.start("Tesi2.db")
-    sources = functions.get_set(conne, "ID", "Source")
-    fogs = functions.get_set(conne, "ID", "Fog")
-    delay = functions.get_delays(conne, "Source", "Fog")
-    normalize_delay(16)
-    delta = avg_delay()
-    DistMatrix = []
-    # initialize mufog and lambdaSrc
-    muFog = []
-    for i in fogs:
-        muFog.append(mu)
-    lambdaSrc = []
-    for i in sources:
-        lambdaSrc.append(lam)
-    y = 0
-    for i in range(int(len(delay) / len(muFog))):
-        mp = []
-        for j in range(len(muFog)):
-            mp.append(delay[j + y][2])
-        DistMatrix.append(mp)
-        y += len(muFog)
-    # number of fog nodes to keep
-    NF=(Nfog*rho*K)/(K-1)
-    if NF == int(NF):
-        NF=int(NF)
-    else:
-        NF=int(NF)+1
-    print(NF)
-    # close connection
-    functions.stop(conne)
 
-'''Ho modificato l'algoritmo mutUniformInt per adattarlo all'esigenza:
-    in particolare distingue le due parti del genoma ed evita la generazione di doppioni nella seconda parte '''
+
 def mutUniformfog(individual, indpb):
-    global Nsrc, Nfog, NF
-    for i in range(Nsrc):
+    global problem
+    for i in range(problem.nsrc):
         if random.random() < indpb:
-            individual[i] = random.randint(0,NF-1)
-    for i in range(NF):
+            individual[i] = random.randint(0,problem.nf-1)
+    for i in range(problem.nf):
         if random.random() < indpb:
-            sost = individual[Nsrc + i]
-            while sost in individual[Nsrc:]:
-                sost = random.randint(0,Nfog-1)
+            sost = individual[problem.nsrc + i]
+            while sost in individual[problem.nsrc:]:
+                sost = random.randint(0,problem.nfog-1)
     return individual,
+
 '''Ho modificato l'algoritmo cxUniform per adattarlo all'esigenza:
     in particolare distingue le due parti del genoma ed evita la generazione di doppioni nella seconda parte'''
 def cxUniformFog(ind1,ind2,indpb):
-    global NF, Nsrc, Nfog
+    global problem
     #size = min(len(ind1), len(ind2))
-    for i in range(Nsrc):
+    for i in range(problem.nsrc):
         if random.random() < indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
-    for i in range(NF):
+    for i in range(problem.nf):
         if random.random() < indpb:
-            if ind1[Nsrc+ i] not in ind2[Nsrc:] and ind2[Nsrc+i] not in ind1[Nsrc:]:
-                ind1[Nsrc+i], ind2[Nsrc+i] = ind2[Nsrc+i], ind1[Nsrc+i]
+            if ind1[problem.nsrc+ i] not in ind2[problem.nsrc:] and ind2[problem.nsrc+i] not in ind1[problem.nsrc:]:
+                ind1[problem.nsrc+i], ind2[problem.nsrc+i] = ind2[problem.nsrc+i], ind1[problem.nsrc+i]
     return ind1, ind2
 
 def init_ga():
     # Initialization
-    global toolbox
+    toolbox = base.Toolbox()
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
 
@@ -155,6 +168,7 @@ def init_ga():
     toolbox.register("mate", cxUniformFog,indpb=0.5)
     toolbox.register("mutate", mutUniformfog, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=7)
+    return toolbox
 
 def plot_data(x,y1,y2=None):
     # crate plots
@@ -174,7 +188,7 @@ def plot_data(x,y1,y2=None):
     plt.show()
 
 
-def solve_ga_simple(cxbp,mutpb):
+def solve_ga_simple(toolbox, cxbp,mutpb):
     # GA solver
     global numPop, numGen
     pop = toolbox.population(n=numPop)
@@ -198,10 +212,8 @@ def solve_ga_simple(cxbp,mutpb):
     #plot_data(gen,mins,stds)
 
 
-def main():
-    global sources, fogs, delay
+if __name__ == "__main__":
     #random.seed(64)
-    
     #decidere: 
     rho = 0.5
     cxbp = 0.5
@@ -209,11 +221,8 @@ def main():
     K = 4
     #delta mu
     mu = 0.1
+    delta = 0.1
+    problem = Problem('Tesi2.db', mu, delta, rho, K)
+    toolbox=init_ga()
+    solve_ga_simple(toolbox, cxbp, mutpb)
 
-    lam = (rho * mu * Nfog) / Nsrc
-    init_problem(lam,mu,rho,K)
-    init_ga()
-    solve_ga_simple(cxbp,mutpb)
-
-if __name__ == "__main__":
-    main()
