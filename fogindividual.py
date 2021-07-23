@@ -38,6 +38,13 @@ class FogIndividual:
             lat_vec.append(self.problem.dist_matrix[i][self.src_mapping[i]])
         return time_tot/self.lambda_tot
 
+    def mm1_time(self, lam, mu):
+        # classical M/M/1 formula
+        if mu > lam:
+            return 1 / (mu - lam)
+        else:
+            return (1 / mu) * (1 / (1 - self.problem.maxrho))
+
     def processing_time(self):
         time_fog = [0] * self.problem.nfog
         time_tot = 0
@@ -45,11 +52,7 @@ class FogIndividual:
         self.compute_lambda_fog()
         # copmute the processing time for every fog node
         for i in range(self.problem.nfog):
-            if self.problem.mu_fog[i] > self.lambda_fog[i]:
-                # classical M/M/1 formula
-                time_fog[i] = 1 / (self.problem.mu_fog[i] - self.lambda_fog[i])
-            else:
-                time_fog[i] = 1 / self.problem.mu_fog[i] * 1 / (1 - self.problem.maxrho)
+            time_fog[i]=self.mm1_time(self.lambda_fog[i], self.problem.mu_fog[i])
         # weighted sum of processing times
         for i in range(self.problem.nfog):
             time_tot += self.lambda_fog[i] * time_fog[i]
