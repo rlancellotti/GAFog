@@ -1,4 +1,5 @@
 import functions
+import statistics
 
 class Problem:
     # nfog  number of fog nodes
@@ -24,7 +25,8 @@ class Problem:
         self.nsrc=len(self.sources)
         self.fogs = functions.get_set(conne, "ID", "Fog")
         self.nfog=len(self.fogs)
-        delays = functions.get_delays(conne, "Source", "Fog")
+        delays = clean_delay(functions.get_distance(conne, "Source", "Fog"))
+        #print(delays)
         self.maxrho=maxrho
         functions.stop(conne)
         delays = normalize_delay(delays, delta)
@@ -36,13 +38,11 @@ class Problem:
         self.lambda_src = []
         for i in self.sources:
             self.lambda_src.append(lam)
-        y = 0
-        for i in range(int(len(delays) / len(self.mu_fog))):
+        for i in range(self.nsrc):
             mp = []
-            for j in range(len(self.mu_fog)):
-                mp.append(delays[j + y][2])
+            for j in range(self.nfog):
+                mp.append(delays[j + i*self.nfog])
             self.dist_matrix.append(mp)
-            y += len(self.mu_fog)
         # number of fog nodes to keep
         if K>0:
             self.nf=(self.nfog*rho*K)/(K-1)
@@ -52,22 +52,28 @@ class Problem:
                 self.nf=int(self.nf)+1
         else:
             self.nf=self.nfog
-        print(lam, self.nsrc, self.nfog, self.nf)
-        #print(self.nf)
+        #print(lam, self.nsrc, self.nfog, self.nf)
 
 def get_avg_delay(delays):
     tot = 0
     n = 0
-    for r in delays:
-        tot += r[2]
+    for i in range(len(delays)):
+        tot += delays[i]
         n += 1
     return tot / n
 
-def normalize_delay(delays, newavg):
+def normalize_delay(delays, delta):
     #print(delays)
-    avg = get_avg_delay(delays)
-    print(avg)
-    for r in delays:
-        r[2] = r[2] * newavg / avg
-    print(get_avg_delay(delays))
+    avg = statistics.median(delays)
+    #print(avg)
+    for i in range(len(delays)):
+        delays[i] = delays[i] * delta / avg
+    #print(statistics.median(delays))
     return delays
+
+def clean_delay(delays):
+    rv=[]
+    for r in delays:
+        rv.append(r[2])
+    #print(rv)
+    return rv

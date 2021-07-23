@@ -14,7 +14,7 @@ from deap import tools
 from deap import algorithms
 
 numGen = 1    # numero di generazioni percui continuare a fare evolevere la popolazione
-numPop = 10    # numero iniziale degli individui alla prima generazione
+numPop = 5    # numero iniziale degli individui alla prima generazione
 maxrho = 0.999
 
 def obj_func(individual1):
@@ -140,11 +140,11 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
                                    stats=stats, halloffame=hof, verbose=True)
     best=FogIndividual(hof[0], problem)
-    print(best.obj_func(), best.network_time(), best.processing_time(), best.lambda_tot)
     #gen=log.select("gen")
     #mins=log.select("min")
     #stds=log.select("std")
     #plot_data(gen,mins,stds)
+    return best
 
 problem=None
 if __name__ == "__main__":
@@ -156,9 +156,12 @@ if __name__ == "__main__":
     # K=0 -> use all fogs
     K = 2
     #delta mu
-    mu = 0.1
-    delta = 0.1
+    deltamu=1
+    delta = 0.01
+    mu=deltamu/delta
     problem = Problem('Tesi2.db', mu, delta, rho, K, maxrho)
     toolbox=init_ga(problem)
-    solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
+
 

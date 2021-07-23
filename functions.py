@@ -39,7 +39,7 @@ def get_linkset(conn, request, table1, table2):
     c.close()
     return _set
 
-def get_delays(conn, table1, table2):
+def get_distance(conn, table1, table2):
     c = conn.cursor()
     c.execute("""select s.ID, f.ID, dst(s.Longitudine,s.Latitudine,f.Longitudine,f.Latitudine)
                 from """+table1+""" s cross join """+table2+""" f""")

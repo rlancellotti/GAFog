@@ -1,4 +1,5 @@
 from problem import Problem
+import statistics
 
 class FogIndividual:
     # individual1=[fog_mapping]+[source_mapping]
@@ -30,9 +31,11 @@ class FogIndividual:
     def network_time(self):
         # compute for every fog node the incoming load
         self.compute_lambda_fog()
+        lat_vec=[]
         time_tot = 0
         for i in range(self.problem.nsrc):    
-            time_tot = self.problem.lambda_src[i] * self.problem.dist_matrix[i][self.src_mapping[i]]
+            time_tot += self.problem.lambda_src[i] * self.problem.dist_matrix[i][self.src_mapping[i]]
+            lat_vec.append(self.problem.dist_matrix[i][self.src_mapping[i]])
         return time_tot/self.lambda_tot
 
     def processing_time(self):
