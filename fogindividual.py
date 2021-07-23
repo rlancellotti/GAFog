@@ -1,5 +1,7 @@
 from problem import Problem
 import statistics
+from mako.template import Template
+from mako.runtime import Context
 
 class FogIndividual:
     # individual1=[fog_mapping]+[source_mapping]
@@ -60,3 +62,13 @@ class FogIndividual:
 
     def obj_func(self):
         return self.processing_time() + self.network_time()
+
+    def create_omnet_files(self, prefix):
+        # crate topology representation (.ned)
+        nedtemplate=prefix+'.ned.mako'
+        nedout=prefix+'.ned'
+        mytemplate=Template(filename=nedtemplate)
+        with open(nedout, "w") as f:
+            f.write(mytemplate.render(nsrc=self.problem.nsrc, nfog=self.problem.nfog, sol=self.src_mapping))
+        # creare simulation setup (.ini)
+        return None

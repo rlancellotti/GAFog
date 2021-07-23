@@ -163,5 +163,6 @@ if __name__ == "__main__":
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
     print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
+    sol.create_omnet_files('fog')
 
 
