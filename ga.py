@@ -64,9 +64,16 @@ def mutUniformfog(individual, indpb):
             individual[i] = random.randint(0,problem.nf-1)
     for i in range(problem.nf):
         if random.random() < indpb:
-            sost = individual[problem.nsrc + i]
-            while sost in individual[problem.nsrc:]:
-                sost = random.randint(0,problem.nfog-1)
+            if problem.nf < problem.nfog:
+                opt=[]
+                for j in range(problem.nfog):
+                    if j not in individual[problem.nsrc:]:
+                        opt.append(j)
+                individual[problem.nsrc + i]=random.choice(opt)
+            else:
+                srcidx=problem.nsrc + i
+                dstidx=problem.nsrc + (i+1) % problem.nf
+                individual[srcidx], individual[dstidx] = individual[dstidx], individual[srcidx]
     return individual,
 
 '''Ho modificato l'algoritmo cxUniform per adattarlo all'esigenza:
@@ -79,7 +86,7 @@ def cxUniformFog(ind1,ind2,indpb):
             ind1[i], ind2[i] = ind2[i], ind1[i]
     for i in range(problem.nf):
         if random.random() < indpb:
-            if ind1[problem.nsrc+ i] not in ind2[problem.nsrc:] and ind2[problem.nsrc+i] not in ind1[problem.nsrc:]:
+            if ind1[problem.nsrc+i] not in ind2[problem.nsrc:] and ind2[problem.nsrc+i] not in ind1[problem.nsrc:]:
                 ind1[problem.nsrc+i], ind2[problem.nsrc+i] = ind2[problem.nsrc+i], ind1[problem.nsrc+i]
     return ind1, ind2
 
@@ -115,13 +122,14 @@ def plot_data(x,y1,y2=None):
     plt.show()
 
 
-def solve_ga_simple(toolbox, cxbp, mutpb):
+def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     # GA solver
     global numPop, numGen
     pop = toolbox.population(n=numPop)
-    # dico di salvare in hof il migliore (1) individuo mai esistito durante l'evoluzione
+    # save best solution in Hall of Fame
     hof = tools.HallOfFame(1)
-    # inizializzo un Logbook che provvederà a salvare tutte le statistiche richieste https://deap.readthedocs.io/en/master/tutorials/basic/part3.html
+    # initialize Logbook to save statistics
+    # https://deap.readthedocs.io/en/master/tutorials/basic/part3.html
     log = tools.Logbook()
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", numpy.mean)
@@ -138,7 +146,7 @@ def solve_ga_simple(toolbox, cxbp, mutpb):
     #stds=log.select("std")
     #plot_data(gen,mins,stds)
 
-
+problem=None
 if __name__ == "__main__":
     #random.seed(64)
     #decidere: 
@@ -146,11 +154,11 @@ if __name__ == "__main__":
     cxbp = 0.5
     mutpb = 0.3
     # K=0 -> use all fogs
-    K = 10
+    K = 2
     #delta mu
     mu = 0.1
     delta = 0.1
     problem = Problem('Tesi2.db', mu, delta, rho, K, maxrho)
     toolbox=init_ga(problem)
-    solve_ga_simple(toolbox, cxbp, mutpb)
+    solve_ga_simple(toolbox, cxbp, mutpb, problem)
 
