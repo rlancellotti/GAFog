@@ -21,14 +21,14 @@ network Fog
         @display("i=block/network2");
     submodules:
         sink: Sink
-        fog: Queue[${nfog}]
-        source: Source[${nsrc}]
+        fog: Queue[${problem.nfog}]
+        source: Source[${problem.nsrc}]
     connections:
-%for i in range(nsrc):
+%for i in range(problem.nsrc):
     source[${i}].out --> fog[${sol[i]}].in++;
 %endfor
     // connect all fog nodes to sink
-    for i in 0..${nfog}{
+    for i in 0..${problem.nfog}{
         fog[i].out --> sink.in++;
     }
 }

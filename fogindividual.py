@@ -63,12 +63,18 @@ class FogIndividual:
     def obj_func(self):
         return self.processing_time() + self.network_time()
 
-    def create_omnet_files(self, prefix):
+    def create_omnet_files(self, template_prefix, out_prefix):
         # crate topology representation (.ned)
-        nedtemplate=prefix+'.ned.mako'
-        nedout=prefix+'.ned'
+        nedtemplate=template_prefix+'.ned.mako'
+        nedout=out_prefix+'.ned'
         mytemplate=Template(filename=nedtemplate)
         with open(nedout, "w") as f:
-            f.write(mytemplate.render(nsrc=self.problem.nsrc, nfog=self.problem.nfog, sol=self.src_mapping))
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping))
         # creare simulation setup (.ini)
+        initemplate=template_prefix+'.ini.mako'
+        iniout=out_prefix+'.ini'
+        mytemplate=Template(filename=initemplate)
+        #print(mytemplate)
+        with open(iniout, "w") as f:
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname='fog'))
         return None

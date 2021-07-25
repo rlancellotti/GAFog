@@ -27,8 +27,10 @@ class Problem:
         self.nfog=len(self.fogs)
         delays = clean_delay(functions.get_distance(conne, "Source", "Fog"))
         #print(delays)
-        self.maxrho=maxrho
         functions.stop(conne)
+        self.maxrho=maxrho
+        self.rho=rho
+        self.delta=delta
         delays = normalize_delay(delays, delta)
         self.dist_matrix = []
         lam = (rho * mu * self.nfog) / self.nsrc
