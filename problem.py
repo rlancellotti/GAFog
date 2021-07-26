@@ -22,11 +22,15 @@ class Problem:
         """
         conne = functions.start(filename)
         self.sources = functions.get_set(conne, "ID", "Source")
+        self.srcpos = functions.get_set(conne, "Longitudine, Latitudine", "Source")
         self.nsrc=len(self.sources)
         self.fogs = functions.get_set(conne, "ID", "Fog")
+        self.fogpos = functions.get_set(conne, "Longitudine, Latitudine", "Fog")
         self.nfog=len(self.fogs)
+        self.sinkpos = functions.get_set(conne, "Longitudine, Latitudine", "Sink")
         delays = clean_delay(functions.get_distance(conne, "Source", "Fog"))
-        #print(delays)
+        #print(functions.get_bb(conne))
+        self.ymin, self.ymax, self.xmin, self.xmax = functions.get_bb(conne)
         functions.stop(conne)
         self.maxrho=maxrho
         self.rho=rho

@@ -1,6 +1,6 @@
-import org.omnetpp.queueing.Queue;
-import org.omnetpp.queueing.Sink;
-import org.omnetpp.queueing.Source;
+import org.omnetpp.queueing.Cloud;
+import org.omnetpp.queueing.FogNode;
+import org.omnetpp.queueing.FogSensor;
 
 
 network ${netname.capitalize()}
@@ -8,9 +8,9 @@ network ${netname.capitalize()}
     parameters:
         @display("i=block/network2");
     submodules:
-        sink: Sink;
-        fog[${problem.nfog}]: Queue;
-        source[${problem.nsrc}]: Source;
+        sink: Cloud;
+        fog[${problem.nfog}]: FogNode;
+        source[${problem.nsrc}]: FogSensor;
     connections:
 %for i in range(problem.nsrc):
         source[${i}].out --> fog[${sol[i]}].in++;

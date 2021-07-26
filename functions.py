@@ -39,6 +39,38 @@ def get_linkset(conn, request, table1, table2):
     c.close()
     return _set
 
+def get_bb(conn):
+    c = conn.cursor()
+    c.execute("""
+        select min(Latitudine) from (
+            select Latitudine from Fog union 
+            select Latitudine from Source union 
+            select Latitudine from Sink)
+            """)
+    min_lat=c.fetchall()[0][0]
+    c.execute("""
+        select max(Latitudine) from (
+            select Latitudine from Fog union 
+            select Latitudine from Source union 
+            select Latitudine from Sink)
+            """)
+    max_lat=c.fetchall()[0][0]
+    c.execute("""
+        select min(Longitudine) from (
+            select Longitudine from Fog union 
+            select Longitudine from Source union 
+            select Longitudine from Sink)
+            """)
+    min_lon=c.fetchall()[0][0]
+    c.execute("""
+        select max(Longitudine) from (
+            select Longitudine from Fog union 
+            select Longitudine from Source union 
+            select Longitudine from Sink)
+            """)
+    max_lon=c.fetchall()[0][0]
+    return min_lat, max_lat, min_lon, max_lon
+
 def get_distance(conn, table1, table2):
     c = conn.cursor()
     c.execute("""select s.ID, f.ID, dst(s.Longitudine,s.Latitudine,f.Longitudine,f.Latitudine)
