@@ -13,7 +13,7 @@ network ${netname.capitalize()}
         source[${problem.nsrc}]: FogSensor;
     connections:
 %for i in range(problem.nsrc):
-        source[${i}].out --> fog[${sol[i]}].in++;
+        source[${i}].out --> {delay = ${problem.dist_matrix[i][sol[i]]}s; } --> fog[${sol[i]}].in++;
 %endfor
         // connect all fog nodes to sink
         for i=0..${problem.nfog-1} {
