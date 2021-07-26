@@ -69,12 +69,12 @@ class FogIndividual:
         nedout=out_prefix+'.ned'
         mytemplate=Template(filename=nedtemplate)
         with open(nedout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping))
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix))
         # creare simulation setup (.ini)
         initemplate=template_prefix+'.ini.mako'
         iniout=out_prefix+'.ini'
         mytemplate=Template(filename=initemplate)
         #print(mytemplate)
         with open(iniout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname='fog'))
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix))
         return None

@@ -1,5 +1,6 @@
 [General]
-network = ${netname}
+network = ${netname.capitalize()}
+ned-path = .;../queueinglib
 #cpu-time-limit = 60s
 cmdenv-config-name = FogBase
 qtenv-default-config = FogBase
@@ -15,7 +16,7 @@ description = "Global scenario"
 **.delta = ${problem.delta}
 **.nfog = ${problem.nfog}
 %for i in range(problem.nsrc):
-**.source[${i}].sendInternal=exponential(${1/problem.lambda_src[i]}s)
+**.source[${i}].interArrivalTime=exponential(${1/problem.lambda_src[i]}s)
 %endfor
 # infinite queue length
 **.fog[*].capacity = -1
