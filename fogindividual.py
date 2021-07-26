@@ -7,6 +7,7 @@ class FogIndividual:
     # individual1=[fog_mapping]+[source_mapping]
     # fog mapping: fog_mapping[fog]=real_fog_ID
     # source mapping: source_mapping[source]=individual_fog_ID
+    colors=['red', 'green', 'blue', 'cyan', 'magenta', 'gold', 'purple']
     def __init__(self, individual, problem):
         self.problem=problem
         self.fog_mapping=[0]*problem.nf
@@ -69,12 +70,12 @@ class FogIndividual:
         nedout=out_prefix+'.ned'
         mytemplate=Template(filename=nedtemplate)
         with open(nedout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix))
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors))
         # creare simulation setup (.ini)
         initemplate=template_prefix+'.ini.mako'
         iniout=out_prefix+'.ini'
         mytemplate=Template(filename=initemplate)
         #print(mytemplate)
         with open(iniout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix))
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors))
         return None

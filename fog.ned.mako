@@ -12,11 +12,12 @@ network ${netname.capitalize()}
         fog[${problem.nfog}]: FogNode;
         source[${problem.nsrc}]: FogSensor;
     connections:
+        // connect all sources to fog nodes
 %for i in range(problem.nsrc):
-        source[${i}].out --> {delay = ${problem.dist_matrix[i][sol[i]]}s; } --> fog[${sol[i]}].in++;
+        source[${i}].out --> {delay = ${problem.dist_matrix[i][sol[i]]}s; @display("ls=${colors[sol[i]%len(colors)]}");} --> fog[${sol[i]}].in++;
 %endfor
         // connect all fog nodes to sink
-        for i=0..${problem.nfog-1} {
-            fog[i].out --> sink.in++;
-        }
+%for i in range(problem.nfog):
+        fog[${i}].out --> {@display("ls=${colors[i%len(colors)]}");} --> sink.in++;
+%endfor
 }
