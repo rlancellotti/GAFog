@@ -1,3 +1,6 @@
 __pycache__/*
 *.ini
 *.ned
+osmarender/*
+data.osm
+data.svg

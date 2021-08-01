@@ -31,6 +31,11 @@ class Problem:
         delays = clean_delay(functions.get_distance(conne, "Source", "Fog"))
         #print(functions.get_bb(conne))
         self.ymin, self.ymax, self.xmin, self.xmax = functions.get_bb(conne)
+        #print("https://www.openstreetmap.org/export#map=%d/%f/%f" %
+        #        (14, (self.ymax+self.ymin)/2, (self.xmax+self.xmin)/2))
+        #print(self.ymin, self.xmin, self.ymax, self.xmax)
+        print("https://overpass-api.de/api/map?bbox=%f,%f,%f,%f"%
+                (self.ymin, self.xmin, self.ymax, self.xmax))
         functions.stop(conne)
         self.maxrho=maxrho
         self.rho=rho
