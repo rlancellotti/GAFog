@@ -34,8 +34,16 @@ class Problem:
         #print("https://www.openstreetmap.org/export#map=%d/%f/%f" %
         #        (14, (self.ymax+self.ymin)/2, (self.xmax+self.xmin)/2))
         #print(self.ymin, self.xmin, self.ymax, self.xmax)
-        print("https://overpass-api.de/api/map?bbox=%f,%f,%f,%f"%
+        #print("https://overpass-api.de/api/map?bbox=%f,%f,%f,%f"%
+        #        (self.ymin, self.xmin, self.ymax, self.xmax))
+        print("https://overpass-api.de/api/interpreter?data=%%3Cunion%%3E%%3Cbbox-query+s=%%22%f%%22+w=%%22%f%%22+n=%%22%f%%22+e=%%22%f%%22%%2F%%3E%%3Crecurse+type%%3D%%22up%%22%%2F%%3E%%3C%%2Funion%%3E%%3Cprint+mode%%3D%%22meta%%22%%2F%%3E"%
                 (self.ymin, self.xmin, self.ymax, self.xmax))
+        print(
+"""<union>
+    <bbox-query s="%f" w="%f" n="%f" e="%f"/>
+    <recurse type="up"/>
+</union>
+<print mode="meta"/>""" % (self.ymin, self.xmin, self.ymax, self.xmax))
         functions.stop(conne)
         self.maxrho=maxrho
         self.rho=rho
