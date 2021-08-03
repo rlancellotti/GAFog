@@ -16,9 +16,20 @@ description = "Global scenario"
 **.delta = ${problem.delta}
 **.nfog = ${problem.nfog}
 %for i in range(problem.nsrc):
+<%
+    srcxpos=(problem.xmax-problem.srcpos[i][0])/(problem.xmax-problem.xmin)
+    srcypos=(problem.ymax-problem.srcpos[i][1])/(problem.ymax-problem.ymin)
+    fogxpos=(problem.xmax-problem.fogpos[sol[i]][0])/(problem.xmax-problem.xmin)
+    fogypos=(problem.ymax-problem.fogpos[sol[i]][1])/(problem.xmax-problem.xmin)
+    delayxpos=srcxpos*0.9+fogxpos*0.1
+    delayypos=srcypos*0.9+fogypos*0.1
+%>\
 **.source[${i}].interArrivalTime=exponential(${1/problem.lambda_src[i]}s)
-**.source[${i}].xpos=${(problem.xmax-problem.srcpos[i][0])/(problem.xmax-problem.xmin)}
-**.source[${i}].ypos=${(problem.ymax-problem.srcpos[i][1])/(problem.ymax-problem.ymin)}
+**.source[${i}].xpos=${srcxpos}
+**.source[${i}].ypos=${srcypos}
+**.delay[${i}].delay=1s * normal(${problem.dist_matrix[i][sol[i]]}, ${0.1*problem.dist_matrix[i][sol[i]]})
+**.delay[${i}].xpos=${delayxpos}
+**.delay[${i}].ypos=${delayypos}
 %endfor
 # infinite queue length
 **.fog[*].capacity = -1

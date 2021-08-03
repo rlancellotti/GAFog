@@ -57,7 +57,7 @@ def load_individuals(creator, problem):
     #print(FogIndividual(individual, problem))
     return creator(individual)
         
-def mutUniformfog(individual, indpb):
+def mut_uniform_fog(individual, indpb):
     global problem
     for i in range(problem.nsrc):
         if random.random() < indpb:
@@ -78,15 +78,14 @@ def mutUniformfog(individual, indpb):
 
 '''Ho modificato l'algoritmo cxUniform per adattarlo all'esigenza:
     in particolare distingue le due parti del genoma ed evita la generazione di doppioni nella seconda parte'''
-def cxUniformFog(ind1,ind2,indpb):
+def cx_uniform_fog(ind1,ind2,indpb):
     global problem
     #size = min(len(ind1), len(ind2))
     for i in range(problem.nsrc):
         if random.random() < indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
     for i in range(problem.nf):
-        if random.random() < indpb:
-            if ind1[problem.nsrc+i] not in ind2[problem.nsrc:] and ind2[problem.nsrc+i] not in ind1[problem.nsrc:]:
+        if random.random() < indpb and ind1[problem.nsrc+i] not in ind2[problem.nsrc:] and ind2[problem.nsrc+i] not in ind1[problem.nsrc:]:
                 ind1[problem.nsrc+i], ind2[problem.nsrc+i] = ind2[problem.nsrc+i], ind1[problem.nsrc+i]
     return ind1, ind2
 
@@ -99,8 +98,8 @@ def init_ga(problem):
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
     
     toolbox.register("evaluate", obj_func)
-    toolbox.register("mate", cxUniformFog,indpb=0.5)
-    toolbox.register("mutate", mutUniformfog, indpb=0.05)
+    toolbox.register("mate", cx_uniform_fog,indpb=0.5)
+    toolbox.register("mutate", mut_uniform_fog, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
