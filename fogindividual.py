@@ -7,7 +7,7 @@ class FogIndividual:
     # individual1=[fog_mapping]+[source_mapping]
     # fog mapping: fog_mapping[fog]=real_fog_ID
     # source mapping: source_mapping[source]=individual_fog_ID
-    colors=['red', 'green', 'blue', 'cyan', 'magenta', 'gold', 'purple']
+    colors=['red', 'teal', 'blue', 'cyan', 'magenta', 'purple']
     def __init__(self, individual, problem):
         self.problem=problem
         self.fog_mapping=[0]*problem.nf

@@ -1,3 +1,12 @@
+<%
+def get_coords(point):
+    x=(point[0]-problem.xmin)/(problem.xmax-problem.xmin)
+    y=(problem.ymax-point[1])/(problem.ymax-problem.ymin)
+    return x, y
+
+def get_color(n):
+    return colors[n%len(colors)]
+%>
 [General]
 network = ${netname.capitalize()}
 ned-path = .;../queueinglib
@@ -17,27 +26,35 @@ description = "Global scenario"
 **.nfog = ${problem.nfog}
 %for i in range(problem.nsrc):
 <%
-    srcxpos=(problem.xmax-problem.srcpos[i][0])/(problem.xmax-problem.xmin)
-    srcypos=(problem.ymax-problem.srcpos[i][1])/(problem.ymax-problem.ymin)
-    fogxpos=(problem.xmax-problem.fogpos[sol[i]][0])/(problem.xmax-problem.xmin)
-    fogypos=(problem.ymax-problem.fogpos[sol[i]][1])/(problem.xmax-problem.xmin)
+    srcxpos, srcypos = get_coords(problem.srcpos[i])
+    fogxpos, fogypos = get_coords(problem.fogpos[sol[i]])
     delayxpos=srcxpos*0.9+fogxpos*0.1
     delayypos=srcypos*0.9+fogypos*0.1
+    color=get_color(sol[i])
 %>\
 **.source[${i}].interArrivalTime=exponential(${1/problem.lambda_src[i]}s)
 **.source[${i}].xpos=${srcxpos}
 **.source[${i}].ypos=${srcypos}
+**.source[${i}].color="${color}"
 **.delay[${i}].delay=1s * normal(${problem.dist_matrix[i][sol[i]]}, ${0.1*problem.dist_matrix[i][sol[i]]})
 **.delay[${i}].xpos=${delayxpos}
 **.delay[${i}].ypos=${delayypos}
+**.delay[${i}].color="${color}"
 %endfor
 # infinite queue length
 **.fog[*].capacity = -1
 **.fog[*].fifo = true
 %for i in range(problem.nfog):
+<%
+    fogxpos, fogypos = get_coords(problem.fogpos[i])
+%>\
 **.fog[${i}].serviceTime=exponential(${1/problem.mu_fog[i]}s)
-**.fog[${i}].xpos=${(problem.xmax-problem.fogpos[i][0])/(problem.xmax-problem.xmin)}
-**.fog[${i}].ypos=${(problem.ymax-problem.fogpos[i][1])/(problem.ymax-problem.ymin)}
+**.fog[${i}].xpos=${fogxpos}
+**.fog[${i}].ypos=${fogypos}
+**.fog[${i}].color="${get_color(i)}"
 %endfor
-**.sink.xpos=${(problem.xmax-problem.fogpos[0][0])/(problem.xmax-problem.xmin)}
-**.sink.ypos=${(problem.ymax-problem.fogpos[0][1])/(problem.ymax-problem.ymin)}
+<%
+    sinkxpos, sinkypos = get_coords(problem.sinkpos[0])
+%>\
+**.sink.xpos=${sinkxpos}
+**.sink.ypos=${sinkypos}
