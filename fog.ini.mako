@@ -20,7 +20,14 @@ sim-time-limit = 900s
 
 [Config FogBase]
 description = "Global scenario"
+# results collection
 **.vector-recording = false
+**.sink.totalServiceTime.result-recording-modes = default,-vector,+histogram
+**.sink.totalQueueingTime.result-recording-modes = default,-vector,+histogram
+**.sink.totalDelayTime.result-recording-modes = default,-vector,+histogram
+**.sink.lifeTime.result-recording-modes = default,-vector,+histogram
+**.fog[*].server.busy.result-recording-modes = default,-vector
+
 **.rho = ${problem.rho}
 **.delta = ${problem.delta}
 **.nfog = ${problem.nfog}
