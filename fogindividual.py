@@ -65,17 +65,25 @@ class FogIndividual:
         return self.processing_time() + self.network_time()
 
     def create_omnet_files(self, template_prefix, out_prefix):
-        # crate topology representation (.ned)
+        # create topology representation (.ned)
         nedtemplate=template_prefix+'.ned.mako'
         nedout=out_prefix+'.ned'
         mytemplate=Template(filename=nedtemplate)
         with open(nedout, "w") as f:
             f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors))
-        # creare simulation setup (.ini)
+        # create simulation setup (.ini)
         initemplate=template_prefix+'.ini.mako'
         iniout=out_prefix+'.ini'
         mytemplate=Template(filename=initemplate)
         #print(mytemplate)
+        #embed solution in problem
+        ga={'expected_processing': self.processing_time(), 'expected_delay': self.network_time()}
         with open(iniout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors))
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors, ga=ga))
+        # create analysis tempalte (.json)
+        configtemplate=template_prefix+'config.json.mako'
+        configout=out_prefix+'config.json'
+        mytemplate=Template(filename=configtemplate)
+        with open(configout, "w") as f:
+            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors, ga=ga))
         return None

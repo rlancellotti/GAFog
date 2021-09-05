@@ -9,5 +9,5 @@ OMNETRES="$GAHOME/omnetpp_resources"
 ./ga.py
 # copy files
 cp $OMNETRES/* $QUEUENETDEST
-cp *.ini *.ned $QUEUENETDEST
+cp *.ini *.ned *.json $QUEUENETDEST
 cp $MAP $MAPDEST

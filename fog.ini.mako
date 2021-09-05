@@ -1,4 +1,5 @@
 <%
+import numpy as np
 def get_coords(point):
     x=(point[0]-problem.xmin)/(problem.xmax-problem.xmin)
     y=(problem.ymax-point[1])/(problem.ymax-problem.ymin)
@@ -29,7 +30,10 @@ description = "Global scenario"
 **.fog[*].server.busy.result-recording-modes = default,-vector
 
 **.rho = ${problem.rho}
-**.delta = ${problem.delta}
+**.deltamu = ${problem.delta*np.mean(problem.mu_fog)}
+**.servicetype = "exp"
+**.expectedprocessing = ${ga['expected_processing']}
+**.expecteddelay = ${ga['expected_delay']}
 **.nfog = ${problem.nfog}
 %for i in range(problem.nsrc):
 <%
