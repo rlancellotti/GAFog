@@ -26,7 +26,7 @@ Prefix = "Fog"
         "SinkTime": {"module": "**.sink", "histogram_name": "lifeTime:histogram"}
     },
     "analyses": {
-%for servicetype in ['exp']:
+%for servicetype in ['exp', 'norm', 'lognormL', 'lognormM', 'lognormS']:
         "${Prefix}-${servicetype}": {
             "outfile": "analysis/${Prefix}-${servicetype}.data",
             "scenarios": {
@@ -36,7 +36,6 @@ Prefix = "Fog"
             "metrics": [
                 {"metric": "SentJobs", "aggr": "sum"},
                 {"metric": "SentJobs", "aggr": "avg"},
-                {"metric": "SrcSentJ", "aggr": "sum"},
                 {"metric": "SrvRho", "aggr": "avg"},
                 {"metric": "SrvRho", "aggr": "std"},
                 {"metric": "SinkService", "aggr": "none"},
@@ -50,15 +49,15 @@ Prefix = "Fog"
             ]
         },
 %for hist in ['SinkService', 'SinkDelay', 'SinkQueue', 'SinkTime']:
-        "${Prefix}-${servicetype}-ServiceH": {
+        "${Prefix}-${servicetype}-${hist}H": {
             "outfile": "analysis/${Prefix}-${servicetype}-${hist}H.data",
             "scenario": {"ServiceType": "${servicetype}", "Rho": "0.5", "DeltaMu": "1"},
             "histogram": "${hist}"
         }\
-%if not (loop.last):
-,
-%else:
+%if loop.last and loop.parent.last:
 
+%else:
+,
 %endif
 %endfor
 %endfor

@@ -31,7 +31,6 @@ description = "Global scenario"
 
 **.rho = ${problem.rho}
 **.deltamu = ${problem.delta*np.mean(problem.mu_fog)}
-**.servicetype = "exp"
 **.expectedprocessing = ${ga['expected_processing']}
 **.expecteddelay = ${ga['expected_delay']}
 **.nfog = ${problem.nfog}
@@ -43,14 +42,14 @@ description = "Global scenario"
     delayypos=srcypos*0.9+fogypos*0.1
     color=get_color(sol[i])
 %>\
-**.source[${i}].interArrivalTime=exponential(${1/problem.lambda_src[i]}s)
 **.source[${i}].xpos=${srcxpos}
 **.source[${i}].ypos=${srcypos}
 **.source[${i}].color="${color}"
-**.delay[${i}].delay=1s * normal(${problem.dist_matrix[i][sol[i]]}, ${0.1*problem.dist_matrix[i][sol[i]]})
+**.source[${i}].interArrivalTime=exponential(${1/problem.lambda_src[i]}s)
 **.delay[${i}].xpos=${delayxpos}
 **.delay[${i}].ypos=${delayypos}
 **.delay[${i}].color="${color}"
+**.delay[${i}].delay=1s * normal(${problem.dist_matrix[i][sol[i]]}, ${0.1*problem.dist_matrix[i][sol[i]]})
 %endfor
 # infinite queue length
 **.fog[*].capacity = -1
@@ -59,7 +58,6 @@ description = "Global scenario"
 <%
     fogxpos, fogypos = get_coords(problem.fogpos[i])
 %>\
-**.fog[${i}].serviceTime=exponential(${1/problem.mu_fog[i]}s)
 **.fog[${i}].xpos=${fogxpos}
 **.fog[${i}].ypos=${fogypos}
 **.fog[${i}].color="${get_color(i)}"
@@ -69,3 +67,37 @@ description = "Global scenario"
 %>\
 **.sink.xpos=${sinkxpos}
 **.sink.ypos=${sinkypos}
+
+# LOGNORMAL VERSION
+# Lognormal parameters: m, w
+# We want a distribution with paremters mean=mu, stddev=sigma
+# note: mu (mean) is not mu (processing rate)!
+# m=ln(mu^2/sqrt(mu^2+sigma^2))
+# w^2=ln(1+(sigma^2/mu^2))
+# we want sigma=4*mu
+# m=ln(mu/sqrt(1+16))
+# w^2=ln(1+16)
+# We consider:
+# lognormL: sigma=1.5 mu
+# lognormM: sigma=mu
+# lognormS: sigma=0.5 mu
+
+%for distr in ['exp', 'norm', 'lognormL', 'lognormM', 'lognormS']:
+[Config Fog${distr}]
+extends=FogBase
+**.servicetype = "${distr}"
+%for i in range(problem.nfog):
+%if distr=='exp':
+**.fog[${i}].serviceTime=exponential(${1/problem.mu_fog[i]}s)
+%elif distr=='norm':
+**.fog[${i}].serviceTime=1s * truncnormal(${1/problem.mu_fog[i]}, ${0.1/problem.mu_fog[i]})
+%elif distr=='lognormL':
+**.fog[${i}].serviceTime=1s * lognormal(log(${1/problem.mu_fog[i]}/sqrt(3.25)), sqrt(log(3.25)))
+%elif distr=='lognormM':
+**.fog[${i}].serviceTime=1s * lognormal(log(${1/problem.mu_fog[i]}/sqrt(2)), sqrt(log(2)))
+%elif distr=='lognormS':
+**.fog[${i}].serviceTime=1s * lognormal(log(${1/problem.mu_fog[i]}/sqrt(1.25)), sqrt(log(1.25)))
+%endif
+%endfor
+
+%endfor

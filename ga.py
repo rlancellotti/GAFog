@@ -16,7 +16,7 @@ from deap import algorithms
 numGen = 1    # numero di generazioni percui continuare a fare evolevere la popolazione
 numPop = 5    # numero iniziale degli individui alla prima generazione
 maxrho = 0.999
-
+gaout = "GA.data"
 def obj_func(individual1):
     global maxrho, problem
     # individual1=[fog_mapping]+[source_mapping]
@@ -161,7 +161,10 @@ if __name__ == "__main__":
     problem = Problem('Tesi2.db', mu, delta, rho, K, maxrho)
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
+    with open(gaout, "w+") as f:
+        f.write("#objf\tnet_delay\tproc_time\n")
+        f.write("%f\t%f\t%f\n" % (sol.obj_func(), sol.network_time(), sol.processing_time()))
+        #print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
     sol.create_omnet_files('fog', 'fog')
 
 
