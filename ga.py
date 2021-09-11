@@ -13,10 +13,11 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 
-numGen = 1    # numero di generazioni percui continuare a fare evolevere la popolazione
-numPop = 5    # numero iniziale degli individui alla prima generazione
+numGen = 500    # numero di generazioni percui continuare a fare evolevere la popolazione
+numPop = 200    # numero iniziale degli individui alla prima generazione
 maxrho = 0.999
-gaout = "GA.data"
+gaout1 = "GA.data"
+gaout2 = "GA-MG1.data"
 def obj_func(individual1):
     global maxrho, problem
     # individual1=[fog_mapping]+[source_mapping]
@@ -137,13 +138,23 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     stats.register("max", numpy.max)
     # Change verbose parameter to see population evolution
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
-                                   stats=stats, halloffame=hof, verbose=True)
+                                   stats=stats, halloffame=hof, verbose=False)
     best=FogIndividual(hof[0], problem)
     #gen=log.select("gen")
     #mins=log.select("min")
     #stds=log.select("std")
     #plot_data(gen,mins,stds)
     return best
+
+def dump_solution(gaout, sol):
+    with open(gaout, "w+") as f:
+            f.write("#type\tobjf\tnet_delay\tproc_time\n")
+            f.write("\"MM1\"\t%f\t%f\t%f\n" % (sol.obj_func(), sol.network_time(), sol.processing_time()))
+            f.write("\"MG1-CV01\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=0.5), sol.network_time(), sol.processing_time(systemtype='MG1', cv=0.5)))
+            f.write("\"MG1-CV05\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=0.5), sol.network_time(), sol.processing_time(systemtype='MG1', cv=0.5)))
+            f.write("\"MG1-CV10\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=1), sol.network_time(), sol.processing_time(systemtype='MG1', cv=1)))
+            f.write("\"MG1-CV15\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=1.5), sol.network_time(), sol.processing_time(systemtype='MG1', cv=1.5)))
+            #print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
 
 problem=None
 if __name__ == "__main__":
@@ -161,10 +172,9 @@ if __name__ == "__main__":
     problem = Problem('Tesi2.db', mu, delta, rho, K, maxrho)
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    with open(gaout, "w+") as f:
-        f.write("#objf\tnet_delay\tproc_time\n")
-        f.write("%f\t%f\t%f\n" % (sol.obj_func(), sol.network_time(), sol.processing_time()))
-        #print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
+    dump_solution(gaout1, sol)
     sol.create_omnet_files('fog', 'fog')
+    sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    dump_solution(gaout2, sol)
 
 

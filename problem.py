@@ -10,7 +10,7 @@ class Problem:
     # mu_fog list of processing rates of fog nodes
     # lambda_src list of arrival rates of sources
     # distMatrix matrix of distances between source and fog nodes
-    def __init__(self, filename, mu, delta, rho, K, maxrho):
+    def __init__(self, filename, mu, delta, rho, K, maxrho, cvmu=1):
         """Initilization 
         Parameters:
             filename (string) db filename containing the topology
@@ -21,6 +21,8 @@ class Problem:
             K=0 -> use all fog nodes
         """
         conne = functions.start(filename)
+        self.mm1_obj=True
+        self.mu_cv=1
         self.sources = functions.get_set(conne, "ID", "Source")
         self.srcpos = functions.get_set(conne, "Longitudine, Latitudine", "Source")
         self.nsrc=len(self.sources)
@@ -31,6 +33,9 @@ class Problem:
         delays = clean_delay(functions.get_distance(conne, "Source", "Fog"))
         #print(functions.get_bb(conne))
         self.ymin, self.ymax, self.xmin, self.xmax = functions.get_bb(conne)
+        self.cvmu=cvmu
+        if cvmu!=1:
+            self.mm1_obj=False
         #print("https://www.openstreetmap.org/export#map=%d/%f/%f" %
         #        (14, (self.ymax+self.ymin)/2, (self.xmax+self.xmin)/2))
         #print(self.ymin, self.xmin, self.ymax, self.xmax)

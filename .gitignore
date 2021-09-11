@@ -4,3 +4,4 @@ fog*.ned
 osmarender/*
 data.*
 fogconfig.json
+GA*.data

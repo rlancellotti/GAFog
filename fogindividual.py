@@ -48,21 +48,40 @@ class FogIndividual:
         else:
             return (1 / mu) * (1 / (1 - self.problem.maxrho))
 
-    def processing_time(self):
+    def mg1_time(self, lam, mu, cv):
+        # M/G/1 Pollaczek-Khinchine formula
+        rho=lam/mu
+        cv2=cv*cv
+        if mu > lam:
+            return (1 / mu) * (1+((1+cv2)/2)*(rho/(1-rho)))
+        else:
+            return (1 / mu) * (1 / (1 - self.problem.maxrho))
+
+    def processing_time(self, systemtype='MM1', cv=1):
         time_fog = [0] * self.problem.nfog
         time_tot = 0
         # compute for every fog node the incoming load
         self.compute_lambda_fog()
         # copmute the processing time for every fog node
         for i in range(self.problem.nfog):
-            time_fog[i]=self.mm1_time(self.lambda_fog[i], self.problem.mu_fog[i])
+            if systemtype=='MM1':
+                time_fog[i]=self.mm1_time(self.lambda_fog[i], self.problem.mu_fog[i])
+            elif systemtype=='MG1':
+                time_fog[i]=self.mg1_time(self.lambda_fog[i], self.problem.mu_fog[i], cv)
         # weighted sum of processing times
         for i in range(self.problem.nfog):
             time_tot += self.lambda_fog[i] * time_fog[i]
         return time_tot / self.lambda_tot
 
-    def obj_func(self):
-        return self.processing_time() + self.network_time()
+    def obj_func(self, systemtype=None, cv=1):
+        # FIXME: must handle three cases: default, force MM1, force MG1
+        if systemtype is None:
+            if self.problem.mm1_obj:
+                return self.processing_time(systemtype='MM1') + self.network_time()
+            else:
+                return self.processing_time(systemtype='MG1', cv=self.problem.mu_cv) + self.network_time()
+        else:
+            return self.processing_time(systemtype=systemtype, cv=cv) + self.network_time()
 
     def create_omnet_files(self, template_prefix, out_prefix):
         # create topology representation (.ned)
