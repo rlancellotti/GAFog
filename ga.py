@@ -160,11 +160,11 @@ problem=None
 if __name__ == "__main__":
     #random.seed(64)
     #decidere: 
-    rho = 0.5
+    rho = 0.8
     cxbp = 0.5
     mutpb = 0.3
     # K=0 -> use all fogs
-    K = 2
+    K = 0
     #delta mu
     deltamu=1
     delta = 0.01

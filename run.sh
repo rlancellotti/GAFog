@@ -11,4 +11,4 @@ OMNETRES="$GAHOME/omnetpp_resources"
 cp $OMNETRES/* $QUEUENETDEST
 cp *.ini *.ned *.json $QUEUENETDEST
 cp $MAP $MAPDEST
-cp GA.data "${QUEUENETDEST}analysis"
+cp GA*.data "${QUEUENETDEST}analysis"
