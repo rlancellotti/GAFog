@@ -8,16 +8,12 @@ class FogIndividual:
     def __init__(self, individual, problem):
         self.problem=problem
         self.nf=problem.get_nfog()
-        self.fog=problem.get_fog_list()
+        self.fognames=problem.get_fog_list()
         self.nsrv=problem.get_nservice()
         self.service=problem.get_microservice_list()
         self.mapping = individual
-        self.lambda_fog = None
-        self.lambda_fog_component = None
-        self.mu_fog = None
-        self.mu_fog_component = None
-        self.compute_lambda_fog()
-        self.compute_mu_fog()
+        self.fog=[None] * self.nf
+        self.compute_fog_status()
 
     def __str__(self):
         return (str(self.mapping))
@@ -29,31 +25,13 @@ class FogIndividual:
                 rv.append(self.service[s])
         return rv
 
-    def compute_lambda_fog(self):
-        self.lambda_fog = [0.0] * self.nf
-        self.lambda_fog_component = [[0.0] * self.nsrv for f in range(self.nf)]
-        microservice=self.problem.get_microservice_list()
-        for sidx in range(len(microservice)):
-            fidx=self.mapping[sidx]
-            # get mapping of microservices
-            ms=microservice[sidx]
-            ms_lam=self.problem.get_microservice(ms)['lambda']
-            # add microservice lambda to fog node lambda
-            self.lambda_fog_component[fidx][sidx]+=ms_lam
-            self.lambda_fog[fidx]+=ms_lam
-        print(self.mapping)
-        print(self.lambda_fog)
-        print(self.lambda_fog_component)
-
     def compute_fog_status(self):
-        self.mu_fog = [0.0] * self.nf
-        self.mu_fog_component = [[0.0] * self.nsrv for f in range(self.nf)]
         # for each fog node
         for fidx in range(self.nf):
             # get list of services for that node
             serv=self.get_service_list(fidx)
-            f=self.problem.get_fog(self.fog[fidx])
-            print(self.fog[fidx], f, serv)
+            f=self.problem.get_fog(self.fognames[fidx])
+            print(self.fognames[fidx], f, serv)
             # compute average service time for that node
             # compute stddev for that node
             tserv=0.0
@@ -77,7 +55,15 @@ class FogIndividual:
             mu=1.0/tserv
             # computer CoV for node
             cv=std/tserv
-            print(tserv, std, mu, cv)
+            self.fog[fidx]={
+                'name': self.fognames[fidx],
+                'tserv': tserv, 
+                'stddev': std, 
+                'mu': mu, 
+                'cv': cv,
+                'lambda': lam_tot
+            }
+            print(self.fog[fidx])
         
 
     def mm1_time(self, lam, mu):
