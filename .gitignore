@@ -1,7 +1,7 @@
 __pycache__/*
 *.ini
 fog*.ned
-osmarender/*
+MM1-MG1-Omnet/osmarender/*
 data.*
 fogconfig.json
 GA*.data

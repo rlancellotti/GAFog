@@ -77,6 +77,8 @@ def mut_uniform_fog(individual, indpb):
                 individual[srcidx], individual[dstidx] = individual[dstidx], individual[srcidx]
     return individual,
 
+'''Ho modificato l'algoritmo cxUniform per adattarlo all'esigenza:
+    in particolare distingue le due parti del genoma ed evita la generazione di doppioni nella seconda parte'''
 def cx_uniform_fog(ind1,ind2,indpb):
     global problem
     #size = min(len(ind1), len(ind2))

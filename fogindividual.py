@@ -1,45 +1,84 @@
 from problem import Problem
+from math import sqrt
 import statistics
-from mako.template import Template
-from mako.runtime import Context
+import json
 
 class FogIndividual:
-    # individual1=[fog_mapping]+[source_mapping]
-    # fog mapping: fog_mapping[fog]=real_fog_ID
-    # source mapping: source_mapping[source]=individual_fog_ID
-    colors=['red', 'teal', 'blue', 'cyan', 'magenta', 'purple']
+
     def __init__(self, individual, problem):
         self.problem=problem
-        self.fog_mapping=[0]*problem.nf
-        for i in range(problem.nf):
-            self.fog_mapping[i] = individual[i+problem.nsrc]
-        self.src_mapping=[0]*problem.nsrc
-        for i in range(problem.nsrc):
-            self.src_mapping[i] = individual[problem.nsrc + individual[i]]
+        self.nf=problem.get_nfog()
+        self.fog=problem.get_fog_list()
+        self.nsrv=problem.get_nservice()
+        self.service=problem.get_microservice_list()
+        self.mapping = individual
         self.lambda_fog = None
-        self.lambda_tot = None
+        self.lambda_fog_component = None
+        self.mu_fog = None
+        self.mu_fog_component = None
+        self.compute_lambda_fog()
+        self.compute_mu_fog()
 
     def __str__(self):
-        return ("%s - %s" % (str(self.fog_mapping), str(self.src_mapping)))
+        return (str(self.mapping))
+
+    def get_service_list(self, fidx):
+        rv=[]
+        for s in range(self.nsrv):
+            if self.mapping[s]==fidx:
+                rv.append(self.service[s])
+        return rv
 
     def compute_lambda_fog(self):
-        if self.lambda_fog is None:
-            self.lambda_fog = [0] * self.problem.nfog
-            self.lambda_tot = 0
-            for i in range(self.problem.nsrc):
-                self.lambda_fog[self.src_mapping[i]] += self.problem.lambda_src[i]
-                self.lambda_tot += self.problem.lambda_src[i]
-            #self.lambda_tot=1
+        self.lambda_fog = [0.0] * self.nf
+        self.lambda_fog_component = [[0.0] * self.nsrv for f in range(self.nf)]
+        microservice=self.problem.get_microservice_list()
+        for sidx in range(len(microservice)):
+            fidx=self.mapping[sidx]
+            # get mapping of microservices
+            ms=microservice[sidx]
+            ms_lam=self.problem.get_microservice(ms)['lambda']
+            # add microservice lambda to fog node lambda
+            self.lambda_fog_component[fidx][sidx]+=ms_lam
+            self.lambda_fog[fidx]+=ms_lam
+        print(self.mapping)
+        print(self.lambda_fog)
+        print(self.lambda_fog_component)
 
-    def network_time(self):
-        # compute for every fog node the incoming load
-        self.compute_lambda_fog()
-        lat_vec=[]
-        time_tot = 0
-        for i in range(self.problem.nsrc):    
-            time_tot += self.problem.lambda_src[i] * self.problem.dist_matrix[i][self.src_mapping[i]]
-            lat_vec.append(self.problem.dist_matrix[i][self.src_mapping[i]])
-        return time_tot/self.lambda_tot
+    def compute_fog_status(self):
+        self.mu_fog = [0.0] * self.nf
+        self.mu_fog_component = [[0.0] * self.nsrv for f in range(self.nf)]
+        # for each fog node
+        for fidx in range(self.nf):
+            # get list of services for that node
+            serv=self.get_service_list(fidx)
+            f=self.problem.get_fog(self.fog[fidx])
+            print(self.fog[fidx], f, serv)
+            # compute average service time for that node
+            # compute stddev for that node
+            tserv=0.0
+            std=0.0
+            lam_tot=0.0
+            for s in serv:
+                # get service data
+                ms=self.problem.get_microservice(s)
+                print(ms)
+                # w_i=lam_i/lam_tot
+                # tserv=sum_i(w_i * tserv_i)
+                tserv+=ms['lambda']*ms['meanserv']
+                # std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
+                std+=ms['lambda']*(ms['stddevserv']**2 + ms['meanserv']**2)
+                lam_tot+=ms['lambda']
+            tserv=tserv/lam_tot
+            std=sqrt((std/lam_tot)-(tserv**2))
+            tserv=tserv/f['capacity']
+            std=std/f['capacity']
+            # compute mu for node
+            mu=1.0/tserv
+            # computer CoV for node
+            cv=std/tserv
+            print(tserv, std, mu, cv)
+        
 
     def mm1_time(self, lam, mu):
         # classical M/M/1 formula
@@ -57,52 +96,19 @@ class FogIndividual:
         else:
             return (1 / mu) * (1 / (1 - self.problem.maxrho))
 
-    def processing_time(self, systemtype='MM1', cv=1):
-        time_fog = [0] * self.problem.nfog
-        time_tot = 0
-        # compute for every fog node the incoming load
-        self.compute_lambda_fog()
-        # copmute the processing time for every fog node
-        for i in range(self.problem.nfog):
-            if systemtype=='MM1':
-                time_fog[i]=self.mm1_time(self.lambda_fog[i], self.problem.mu_fog[i])
-            elif systemtype=='MG1':
-                time_fog[i]=self.mg1_time(self.lambda_fog[i], self.problem.mu_fog[i], cv)
-        # weighted sum of processing times
-        for i in range(self.problem.nfog):
-            time_tot += self.lambda_fog[i] * time_fog[i]
-        return time_tot / self.lambda_tot
-
     def obj_func(self, systemtype=None, cv=1):
-        # FIXME: must handle three cases: default, force MM1, force MG1
-        if systemtype is None:
-            if self.problem.mm1_obj:
-                return self.processing_time(systemtype='MM1') + self.network_time()
-            else:
-                return self.processing_time(systemtype='MG1', cv=self.problem.mu_cv) + self.network_time()
-        else:
-            return self.processing_time(systemtype=systemtype, cv=cv) + self.network_time()
-
-    def create_omnet_files(self, template_prefix, out_prefix):
-        # create topology representation (.ned)
-        nedtemplate=template_prefix+'.ned.mako'
-        nedout=out_prefix+'.ned'
-        mytemplate=Template(filename=nedtemplate)
-        with open(nedout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors))
-        # create simulation setup (.ini)
-        initemplate=template_prefix+'.ini.mako'
-        iniout=out_prefix+'.ini'
-        mytemplate=Template(filename=initemplate)
-        #print(mytemplate)
-        #embed solution in problem
-        ga={'expected_processing': self.processing_time(), 'expected_delay': self.network_time()}
-        with open(iniout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors, ga=ga))
-        # create analysis tempalte (.json)
-        configtemplate=template_prefix+'config.json.mako'
-        configout=out_prefix+'config.json'
-        mytemplate=Template(filename=configtemplate)
-        with open(configout, "w") as f:
-            f.write(mytemplate.render(problem=self.problem, sol=self.src_mapping, netname=out_prefix, colors=FogIndividual.colors, ga=ga))
         return None
+        
+if __name__ == "__main__":
+    with open('sample_input.json',) as f:
+        data = json.load(f)
+    print('problem objct')
+    p=Problem(data)
+    print(p)
+    mapping=[0, 1, 1]
+    print('individual objct ', mapping)
+    i=FogIndividual(mapping, p)
+    mapping=[1, 1, 0]
+    print('individual objct ', mapping)
+    i=FogIndividual(mapping, p)
+
