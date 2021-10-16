@@ -21,17 +21,30 @@ class Problem:
     def __str__(self):
         return 'services: %s' % str(list(self.microservice.keys()))
     
+    def get_network_key(self, f1, f2):
+        return '%s-%s'%(f1, f2)
+
     def get_delay(self, f1, f2):
-        k='%s-%s'%(f1, f2)
+        k=self.get_network_key(f1, f2)
+        # search (f1, f2)
         if k in self.network:
             return self.network[k]
         else:
-            k='%s-%s'%(f2, f1)
-            if k in self.network:
-                return self.network[k]
+            # if not, create automatically an entry with delay=0 for f1, f1
+            if f1==f2:
+                k = self.get_network_key(f1, f1)
+                rv={'delay': 0.0}
+                self.network[k]=rv
+                return rv
             else:
-                # distance not found!
-                return None
+                # otherwise look for reverse mapping
+                k=self.get_network_key(f2, f1)
+                if k in self.network:
+                    self.network[self.get_network_key(f1, f2)]=self.network[k]
+                    return self.network[k]
+                else:
+                    # distance not found!
+                    return None
 
     def compute_service_params(self):
         for ms in self.microservice:
@@ -72,7 +85,6 @@ class Problem:
             return self.fog[f]
         else:
             return None
-
 
     def get_nfog(self):
         return len(self.fog)

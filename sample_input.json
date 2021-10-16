@@ -19,8 +19,7 @@
         "S3": {
             "servicechain": "SC2",
             "lambda": 0.5
-        }
-        
+        }   
     },
     "servicechain": {
         "SC1": {

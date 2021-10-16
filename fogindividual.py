@@ -11,9 +11,18 @@ class FogIndividual:
         self.fognames=problem.get_fog_list()
         self.nsrv=problem.get_nservice()
         self.service=problem.get_microservice_list()
+        self.serviceidx=self.get_service_idx()
         self.mapping = individual
         self.fog=[None] * self.nf
         self.compute_fog_status()
+
+    def get_service_idx(self):
+        rv={}
+        i=0
+        for s in self.service:
+            rv[s]=i
+            i+=1
+        return rv 
 
     def __str__(self):
         return (str(self.mapping))
@@ -61,11 +70,12 @@ class FogIndividual:
                 'stddev': std, 
                 'mu': mu, 
                 'cv': cv,
-                'lambda': lam_tot
+                'lambda': lam_tot,
+                'tresp': self.mg1_time(lam_tot, mu, cv),
+                'rho': lam_tot/mu
             }
             print(self.fog[fidx])
         
-
     def mm1_time(self, lam, mu):
         # classical M/M/1 formula
         if mu > lam:
@@ -82,8 +92,29 @@ class FogIndividual:
         else:
             return (1 / mu) * (1 / (1 - self.problem.maxrho))
 
-    def obj_func(self, systemtype=None, cv=1):
-        return None
+    def obj_func(self):
+        tr_tot=0.0
+        # for each service chain
+        for sc in self.problem.get_servicechain_list():
+            prevfog=None
+            tr=0.0
+            # for each service
+            for s in self.problem.get_microservice_list(sc=sc):
+                # get fog node id from service name
+                fidx=self.mapping[self.serviceidx[s]]
+                fname=self.fognames[fidx]
+                # add tresp for node where the service is located
+                tr+=self.fog[fidx]['tresp']
+                # add tnet for every node (except first)
+                print('computing netwotk delay for service', s)
+                if prevfog is not None:
+                    print('network delay contribution', prevfog, fname)
+                    tr+=self.problem.get_delay(prevfog, fname)['delay']
+                prevfog=fname
+            #FIXME: consider weights for different services!
+            print(tr_tot)
+            tr_tot+=tr
+        return tr_tot/len(self.problem.get_servicechain_list())
         
 if __name__ == "__main__":
     with open('sample_input.json',) as f:
@@ -94,7 +125,9 @@ if __name__ == "__main__":
     mapping=[0, 1, 1]
     print('individual objct ', mapping)
     i=FogIndividual(mapping, p)
+    print('obj_func= ' + str(i.obj_func()))
     mapping=[1, 1, 0]
     print('individual objct ', mapping)
     i=FogIndividual(mapping, p)
+    print('obj_func= ' + str(i.obj_func()))
 
