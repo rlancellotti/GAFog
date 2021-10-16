@@ -56,6 +56,10 @@ class Problem:
         
     def get_fog_list(self):
         return list(self.fog.keys())
+    
+    def get_service_for_sensor(self, s):
+        sc=self.sensor[s]['servicechain']
+        return self.servicechain[sc]['services'][0]
 
     def compute_chain_params(self):
         for sc in self.servicechain:
@@ -91,8 +95,7 @@ class Problem:
 
     def get_nservice(self):
         return len(self.microservice)
-        
-         
+
 if __name__ == '__main__':
     with open('sample_input.json',) as f:
         data = json.load(f)

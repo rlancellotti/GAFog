@@ -1,0 +1,15 @@
+{
+    "microservice": {
+        "MS1_1": "F1",
+        "MS1_2": "F2"
+    },
+    "sensor": {
+        "S1": "F1",
+        "S2": "F2"
+    },
+    "performance": {
+        "SC1": {
+            "resptime": 1.2
+        }
+    }
+}

@@ -13,79 +13,34 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 
-numGen = 500    # numero di generazioni percui continuare a fare evolevere la popolazione
-numPop = 200    # numero iniziale degli individui alla prima generazione
-maxrho = 0.999
+numGen = 1    # number fo generations used in the GA
+numPop = 5    # initial number of individuals at gen0
 gaout1 = "GA.data"
-gaout2 = "GA-MG1.data"
+
 def obj_func(individual1):
-    global maxrho, problem
-    # individual1=[fog_mapping]+[source_mapping]
-    # fog mapping: fog_mapping[fog]=real_fog_ID
-    # source mapping: source_mapping[source]=individual_fog_ID
+    global problem
     ind=FogIndividual(individual1, problem)
     return ind.obj_func(),
-    #print(ind)
-    #individual = [0]*problem.nsrc
-    #for i in range(problem.nsrc):
-    #    individual[i] = individual1[problem.nsrc + individual1[i]]
-    #latency = 0
-    # length = len(muFog)
-    #length = problem.nfog
-    #lambda_fog = [0] * length
-    #time_fog = [0] * length
-    #for i in range(problem.nsrc):
-    #    lambda_fog[individual[i]] += problem.lambda_src[i]
-    # num_nodi = funzioni.membriNodo(individual, lungh)
-    #print(problem.nfog, len(problem.mu_fog))
-    #for i in range(problem.nfog):
-    #    if problem.mu_fog[i] > lambda_fog[i]:
-    #        time_fog[i] = 1 / (problem.mu_fog[i] - lambda_fog[i])
-    #    else:
-    #        time_fog[i] = 1 / problem.mu_fog[i] * 1 / (1 - maxrho)
-    #for i in range(problem.nsrc):
-    #    latency += (problem.dist_matrix[i][individual[i]] + time_fog[individual[i]])
-    # valid = is_valid(individual)
-    #return latency,
 
 def load_individuals(creator, problem):
     individual = list()
-    for i in range(problem.nsrc):
-        individual.append(random.randint(0,problem.nf-1))
-    nodi = random.sample(range(problem.nfog),problem.nf)
-    #print(nodi)
-    individual = individual + nodi
-    #print(FogIndividual(individual, problem))
+    for i in range(problem.get_nservice()):
+        individual.append(random.randint(0,problem.get_nfog()))
     return creator(individual)
         
 def mut_uniform_fog(individual, indpb):
     global problem
-    for i in range(problem.nsrc):
+    for i in range(problem.get_nservice()):
         if random.random() < indpb:
-            individual[i] = random.randint(0,problem.nf-1)
-    for i in range(problem.nf):
-        if random.random() < indpb:
-            if problem.nf < problem.nfog:
-                opt=[]
-                for j in range(problem.nfog):
-                    if j not in individual[problem.nsrc:]:
-                        opt.append(j)
-                individual[problem.nsrc + i]=random.choice(opt)
-            else:
-                srcidx=problem.nsrc + i
-                dstidx=problem.nsrc + (i+1) % problem.nf
-                individual[srcidx], individual[dstidx] = individual[dstidx], individual[srcidx]
+            individual[i] = random.randint(0,problem.get_nfog()-1)
     return individual,
 
 def cx_uniform_fog(ind1,ind2,indpb):
     global problem
     #size = min(len(ind1), len(ind2))
-    for i in range(problem.nsrc):
+    for i in range(problem.get_nservice()):
         if random.random() < indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
-    for i in range(problem.nf):
-        if random.random() < indpb and ind1[problem.nsrc+i] not in ind2[problem.nsrc:] and ind2[problem.nsrc+i] not in ind1[problem.nsrc:]:
-                ind1[problem.nsrc+i], ind2[problem.nsrc+i] = ind2[problem.nsrc+i], ind1[problem.nsrc+i]
     return ind1, ind2
 
 def init_ga(problem):
@@ -145,10 +100,10 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     return best
 
 def dump_solution(gaout, sol):
+    # FIXME must consider new solution model!
     with open(gaout, "w+") as f:
             f.write("#type\tobjf\tnet_delay\tproc_time\n")
-            f.write("\"MM1\"\t%f\t%f\t%f\n" % (sol.obj_func(), sol.network_time(), sol.processing_time()))
-            f.write("\"MG1-CV01\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=0.1), sol.network_time(), sol.processing_time(systemtype='MG1', cv=0.1)))
+            f.write("\"MG1-CV01\"\t%f\t%f\t%f\n" % sol.obj_func())
             f.write("\"MG1-CV05\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=0.5), sol.network_time(), sol.processing_time(systemtype='MG1', cv=0.5)))
             f.write("\"MG1-CV10\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=1), sol.network_time(), sol.processing_time(systemtype='MG1', cv=1)))
             f.write("\"MG1-CV15\"\t%f\t%f\t%f\n" % (sol.obj_func(systemtype='MG1', cv=1.5), sol.network_time(), sol.processing_time(systemtype='MG1', cv=1.5)))
@@ -157,22 +112,13 @@ def dump_solution(gaout, sol):
 problem=None
 if __name__ == "__main__":
     #random.seed(64)
-    #decidere: 
-    rho = 0.8
     cxbp = 0.5
     mutpb = 0.3
-    # K=0 -> use all fogs
-    K = 0
-    #delta mu
-    deltamu=1
-    delta = 0.01
-    mu=deltamu/delta
-    problem = Problem('Tesi2.db', mu, delta, rho, K, maxrho)
+    with open('sample_input.json',) as f:
+        data = json.load(f)
+    problem=Problem(data)
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
     dump_solution(gaout1, sol)
-    sol.create_omnet_files('fog', 'fog')
-    sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    dump_solution(gaout2, sol)
 
 

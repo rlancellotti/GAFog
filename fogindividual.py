@@ -15,6 +15,7 @@ class FogIndividual:
         self.mapping = individual
         self.fog=[None] * self.nf
         self.compute_fog_status()
+        self.resptimes=None
 
     def get_service_idx(self):
         rv={}
@@ -92,8 +93,8 @@ class FogIndividual:
         else:
             return (1 / mu) * (1 / (1 - self.problem.maxrho))
 
-    def obj_func(self):
-        tr_tot=0.0
+    def compute_performance(self):
+        rv = {}
         # for each service chain
         for sc in self.problem.get_servicechain_list():
             prevfog=None
@@ -111,10 +112,25 @@ class FogIndividual:
                     print('network delay contribution', prevfog, fname)
                     tr+=self.problem.get_delay(prevfog, fname)['delay']
                 prevfog=fname
-            #FIXME: consider weights for different services!
-            print(tr_tot)
-            tr_tot+=tr
-        return tr_tot/len(self.problem.get_servicechain_list())
+            rv[sc]={"resptime": tr}
+        return rv
+
+    def obj_func(self):
+        tr_tot=0.0
+        if self.resptimes is None:
+            self.resptimes=self.compute_performance()
+        for sc in self.resptimes:
+            tr_tot+=self.resptimes[sc]['resptime']
+        return tr_tot/len(self.resptimes)
+    
+    def dump_solution(self):
+        rv={'performance': self.resptimes, 'microservice': {}, 'sensor': {}}
+        for msidx in self.mapping:
+            rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
+        for s in self.problem.sensor:
+            msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
+            rv['sensor'][s]=self.fognames[self.mapping[msidx]]
+        return rv
         
 if __name__ == "__main__":
     with open('sample_input.json',) as f:
@@ -126,8 +142,10 @@ if __name__ == "__main__":
     print('individual objct ', mapping)
     i=FogIndividual(mapping, p)
     print('obj_func= ' + str(i.obj_func()))
+    print(json.dumps(i.dump_solution(), indent=2))
     mapping=[1, 1, 0]
     print('individual objct ', mapping)
     i=FogIndividual(mapping, p)
     print('obj_func= ' + str(i.obj_func()))
+    print(json.dumps(i.dump_solution(), indent=2))
 
