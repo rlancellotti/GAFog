@@ -8,6 +8,9 @@ from fogindividual import FogIndividual
 import matplotlib.pyplot as plt
 from collections import namedtuple
 import json
+import sys
+import argparse
+import http.server
 
 from deap import base
 from deap import creator
@@ -18,6 +21,7 @@ numGen = 1    # number fo generations used in the GA
 numPop = 50    # initial number of individuals at gen0
 
 def obj_func(individual1):
+    # FIXME: should remove this global dependency!
     global problem
     ind=FogIndividual(individual1, problem)
     return ind.obj_func(),
@@ -29,16 +33,18 @@ def load_individuals(creator, problem):
     return creator(individual)
         
 def mut_uniform_fog(individual, indpb):
+    # FIXME: should remove this global dependency!
     global problem
-    for i in range(problem.get_nservice()):
+    for i in range(len(individual)):
         if random.random() < indpb:
             individual[i] = random.randint(0,problem.get_nfog()-1)
     return individual,
 
 def cx_uniform_fog(ind1,ind2,indpb):
+    # FIXME: should remove this global dependency!
     global problem
-    #size = min(len(ind1), len(ind2))
-    for i in range(problem.get_nservice()):
+    size = min(len(ind1), len(ind2))
+    for i in range(size):
         if random.random() < indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
     return ind1, ind2
@@ -58,6 +64,7 @@ def init_ga(problem):
     return toolbox
 
 def solve_ga_simple(toolbox, cxbp, mutpb, problem):
+    # FIXME: should remove this global dependency!
     # GA solver
     global numPop, numGen
     pop = toolbox.population(n=numPop)
@@ -89,19 +96,31 @@ def dump_solution(gaout, sol):
             # print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
 
 problem=None
-if __name__ == "__main__":
-    # fname='sample_input.json'
-    fname='sample_input2.json'
+
+def solve_problem(data):
+    # FIXME: should remove this global dependency!
+    global problem
     cxbp = 0.5
     mutpb = 0.3
-    with open(fname,) as f:
-        data = json.load(f)
-    resp=data['response']
     problem=Problem(data)
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    resp=data['response']
     if resp.startswith('file://'):
         dump_solution(resp.lstrip('file://'), sol)
-    #else: send request
+    #else: send request to submit response
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-s', '--server', action='store_true', help='run as http-bsaed service, Default false')
+    parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
+    args = parser.parse_args()
+    fname=args.file if args.file is not None else 'sample_input2.json'
+    if args.server:
+        sys.exit()
+    else:
+        with open(fname,) as f:
+            data = json.load(f)
+        solve_problem(data)
 
 
