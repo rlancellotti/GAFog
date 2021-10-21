@@ -16,7 +16,6 @@ from deap import algorithms
 
 numGen = 1    # number fo generations used in the GA
 numPop = 50    # initial number of individuals at gen0
-gaout = "GA.data"
 
 def obj_func(individual1):
     global problem
@@ -83,7 +82,6 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     return best
 
 def dump_solution(gaout, sol):
-    # FIXME must consider new solution model!
     with open(gaout, "w+") as f:
             json.dump(sol.dump_solution(), f, indent=2)
             # f.write("#type\tobjf\n")
@@ -92,14 +90,18 @@ def dump_solution(gaout, sol):
 
 problem=None
 if __name__ == "__main__":
-    #random.seed(64)
+    # fname='sample_input.json'
+    fname='sample_input2.json'
     cxbp = 0.5
     mutpb = 0.3
-    with open('sample_input.json',) as f:
+    with open(fname,) as f:
         data = json.load(f)
+    resp=data['response']
     problem=Problem(data)
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    dump_solution(gaout, sol)
+    if resp.startswith('file://'):
+        dump_solution(resp.lstrip('file://'), sol)
+    #else: send request
 
 

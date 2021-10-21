@@ -7,11 +7,21 @@ class Problem:
         self.sensor=problem['sensor']
         self.servicechain=problem['servicechain']
         self.microservice=problem['microservice']
-        self.network=problem['network']
+        if 'network' in problem:
+            self.network=problem['network']
+        else:
+            self.network=self.fake_network(self.fog)
         self.maxrho=0.999
         self.compute_service_params()
         self.compute_chain_params()
     
+    def fake_network(self, fognodes):
+        rv={}
+        for f1 in fognodes:
+            for f2 in fognodes:
+                rv[self.get_network_key(f1, f2)]={'delay': 0.0}
+        return rv
+
     def get_capacity(self, f):
         if f in self.fog:
             return self.fog[f]['capacity']
