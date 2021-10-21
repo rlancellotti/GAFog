@@ -1,5 +1,5 @@
 {
-    "response":"file://sample_output2.json",
+    "response": "http://localhost:5000/api/v1.0/solution",
     "fog": {
         "F1": {
             "capacity": 1.0

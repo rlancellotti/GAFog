@@ -109,9 +109,8 @@ def solve_problem(data):
     if resp.startswith('file://'):
         dump_solution(resp.lstrip('file://'), sol)
     else:
-        # use request package to send results
-        response = requests.post(data['response'], json=sol)
-        print(response.status_code)
+        # use requests package to send results
+        requests.post(data['response'], json=sol.dump_solution())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
