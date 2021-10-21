@@ -10,7 +10,7 @@ from collections import namedtuple
 import json
 import sys
 import argparse
-import http.server
+import requests
 
 from deap import base
 from deap import creator
@@ -108,19 +108,18 @@ def solve_problem(data):
     resp=data['response']
     if resp.startswith('file://'):
         dump_solution(resp.lstrip('file://'), sol)
-    #else: send request to submit response
+    else:
+        # use request package to send results
+        response = requests.post(data['response'], json=sol)
+        print(response.status_code)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--server', action='store_true', help='run as http-bsaed service, Default false')
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
     args = parser.parse_args()
     fname=args.file if args.file is not None else 'sample_input2.json'
-    if args.server:
-        sys.exit()
-    else:
-        with open(fname,) as f:
-            data = json.load(f)
-        solve_problem(data)
+    with open(fname,) as f:
+        data = json.load(f)
+    solve_problem(data)
 
 
