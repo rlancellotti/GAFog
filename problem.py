@@ -72,6 +72,7 @@ class Problem:
         return self.servicechain[sc]['services'][0]
 
     def compute_chain_params(self):
+        tot_weight=0.0
         for sc in self.servicechain:
             lam=0.0
             for s in self.sensor:
@@ -81,6 +82,13 @@ class Problem:
             # intialize also lambda for each microservice
             for s in self.servicechain[sc]['services']:
                 self.microservice[s]['lambda']=lam
+            # initilize weight of service chain if missing
+            if 'weight' not in self.servicechain[sc]:
+                self.servicechain[sc]['weight']=lam
+            tot_weight+=self.servicechain[sc]['weight']
+        # normalize weights
+        for sc in self.servicechain:
+            self.servicechain[sc]['weight'] /= tot_weight
 
     def get_microservice_list(self, sc=None):
         if sc is None:

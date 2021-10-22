@@ -1,5 +1,5 @@
 {
-    "response": "http://localhost:5000/api/v1.0/solution",
+    "response": "file://sample_output.json",
     "fog": {
         "F1": {
             "capacity": 1.0
@@ -24,10 +24,12 @@
     },
     "servicechain": {
         "SC1": {
-            "services": ["MS1_1", "MS1_2"]
+            "services": ["MS1_1", "MS1_2"],
+            "weight": 1
         },
         "SC2": {
-            "services": ["MS2_1"]
+            "services": ["MS2_1"],
+            "weight": 1
         }
     },
     "microservice": {

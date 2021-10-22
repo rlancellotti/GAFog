@@ -131,9 +131,8 @@ class FogIndividual:
         if self.resptimes is None:
             self.resptimes=self.compute_performance()
         for sc in self.resptimes:
-        #FIXME: now it is a plain average: shoul be weighted with lambda!
-            tr_tot+=self.resptimes[sc]['resptime']
-        return tr_tot/len(self.resptimes)
+            tr_tot+=self.resptimes[sc]['resptime']*self.problem.servicechain[sc]['weight']
+        return tr_tot
     
     def dump_solution(self):
         print('dumping solution')
@@ -141,6 +140,7 @@ class FogIndividual:
             self.obj_func()
         rv={'performance': self.resptimes, 'microservice': {}, 'sensor': {}}
         print(self.mapping)
+        print(self.obj_func())
         for msidx in range(self.nsrv):
             rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
         for s in self.problem.sensor:
