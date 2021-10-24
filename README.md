@@ -5,9 +5,9 @@ to run the code:
     'ga.py [-f json_input]'
 
 the output will be in the file spacified in json input file
-## To run service:
+## To run as service:
 to run the code:
-    'run_flask.sh'
+    'python flask_app.py'
 
 submit job with: 
     'curl -X POST -H "Content-Type: application/json" -d @sample_input2.json http://localhost:8080/api/v1.0/ga'
