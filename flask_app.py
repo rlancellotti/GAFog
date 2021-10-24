@@ -21,3 +21,5 @@ def post_solution():
         return {'message': 'solution submitted'}, 201
     return {'message': 'Request must be JSON'}, 415
 
+if __name__ == '__main__':
+      app.run(host='0.0.0.0', port=8080)

@@ -10,7 +10,7 @@ to run the code:
     'run_flask.sh'
 
 submit job with: 
-    'curl -X POST -H "Content-Type: application/json" -d @sample_input2.json http://localhost:5000/api/v1.0/ga'
+    'curl -X POST -H "Content-Type: application/json" -d @sample_input2.json http://localhost:8080/api/v1.0/ga'
 ## Input definition
 The input is a JSON object containing the following sections:
 - **fog**: fog nodes definition. Fog nodes include a 'capacity' field containing the relative capacity of the node. Capacity is a multiplier for the service throughput when deployed on that node (capacity>1 means service time is lower, capacity <1 means the service time is higher)
@@ -29,7 +29,7 @@ Solutions can be sent using:
 The solution endpoing is specified in the input file using the key 'response' in the input
 Examples:
     '{"response": "file://sample_output2.json"}'
-    '{"response": "http://localhost:5000/api/v1.0/solution"}'
+    '{"response": "http://localhost:8080/api/v1.0/solution"}'
 ## Relevant sources
 - **problem.py**: class to define the problem structure
 - **fogindividual.py**: class to wrap a solution of the genetic algorithm
