@@ -11,11 +11,11 @@
     "sensor": {
         "S1": {
             "servicechain": "SC1",
-            "lambda": 0.4
+            "lambda": 0.6
         },
         "S2": {
             "servicechain": "SC1",
-            "lambda": 0.4
+            "lambda": 0.6
         },
         "S3": {
             "servicechain": "SC2",

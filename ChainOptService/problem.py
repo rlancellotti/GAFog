@@ -66,10 +66,16 @@ class Problem:
         
     def get_fog_list(self):
         return list(self.fog.keys())
+
+    def get_sensor_list(self):
+        return list(self.sensor.keys())
     
     def get_service_for_sensor(self, s):
         sc=self.sensor[s]['servicechain']
         return self.servicechain[sc]['services'][0]
+    
+    def get_chain_for_sensor(self, s):
+        return self.sensor[s]['servicechain']
 
     def compute_chain_params(self):
         tot_weight=0.0

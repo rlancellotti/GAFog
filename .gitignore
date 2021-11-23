@@ -6,3 +6,9 @@ data.*
 fogconfig.json
 GA*.data
 GA.data
+ChainOptService/__pycache__/*
+VNSOptService/__pycache__/*
+CharactService/__pycache__/*
+GraphOptService/__pycache__/*
+*.dot
+*.svg

@@ -135,12 +135,21 @@ class FogIndividual:
         return tr_tot
     
     def dump_solution(self):
-        print('dumping solution')
+        #print('dumping solution')
         if self.resptimes is None:
             self.obj_func()
-        rv={'performance': self.resptimes, 'microservice': {}, 'sensor': {}}
-        print(self.mapping)
-        print(self.obj_func())
+        rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}}
+        # add services in each service chain
+        for sc in self.problem.get_servicechain_list():
+            rv['servicechain'][sc]['services']=self.problem.get_microservice_list(sc=sc)
+            rv['servicechain'][sc]['sensors']=[]
+        #add sensors connected to each service chain
+        for s in self.problem.get_sensor_list():
+            sc=self.problem.get_chain_for_sensor(s)
+            rv['servicechain'][sc]['sensors'].append(s)
+        # add sensor list for each service chain
+        #print(self.mapping)
+        #print(self.obj_func())
         for msidx in range(self.nsrv):
             rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
         for s in self.problem.sensor:
