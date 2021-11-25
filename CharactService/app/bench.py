@@ -34,11 +34,6 @@ def exec_test(data):
     start_t_file.close()
     return compute_results()
 
-def debug():
-    nani = open("nani.txt", "a")
-    nani.write("Sofar so good\n")
-    nani.close()
-
 
 def compute_results():
     # Open timestamp files
@@ -49,21 +44,20 @@ def compute_results():
     end_times = end_file.readlines()
     results = open("Results.json", "r")
     json_data = json.load(results)
-    debug()
+
     # To datetime format
     start_times = parse_time(start_times)
     end_times = parse_time(end_times)
-    debug()
     deltas = []
     for i in range(0,10):
         deltas.append((end_times[i] - start_times[i]).total_seconds())
-    debug()
+
     avg = statistics.mean(deltas)
     stddev = statistics.stdev(deltas)
     output = {"output": json_data}
     output["average"] = avg
     output["stddev"] = stddev
-    debug()
+
     return output
 
 
