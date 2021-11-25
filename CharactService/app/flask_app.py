@@ -9,10 +9,11 @@ def start_bench():
     if request.is_json:
         data = request.get_json()
         num = exec_test(data)
-        if num == 0:
+        if not num:
             print("Error")
-            return {'message': 'Something happened'}, 501
-        return {'message': 'Benchmark completed', 'runs': num}, 201
+            return {'message': 'Something happened during the test'}, 501
+        return {"results": num}, 201
+        # TODO: Remove all temporary files
     return {'message': 'Request must be JSON'}, 415
 
 @app.post("/api/result")
