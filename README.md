@@ -7,4 +7,4 @@ Joint work with university of Bologna
 
 ## Other relevant functions
 - VNSOptService: not-yet working service to implement a Variable Neighborhood Search algorithm top optimize deployment of microservices
-- MM1-MG1-Omnet: GA-based lagorithm to design the deployment scheme of a fog infrastructure and simulate its perofrmance using Omnet++
+- MM1-MG1-Omnet: GA-based algorithm to design the deployment scheme of a fog infrastructure and simulate its performance using Omnet++
