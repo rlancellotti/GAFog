@@ -49,18 +49,17 @@ class OptSolution:
             for s in serv:
                 # get service data
                 ms=self.problem.get_microservice(s)
-                # print(ms)
-                # w_i=lam_i/lam_tot
-                # tserv=sum_i(w_i * tserv_i)
+                # compute weigths: w_i=lam_i/lam_tot
+                # average service time: tserv=sum_i(w_i * tserv_i)
                 tserv+=ms['lambda']*ms['meanserv']
-                # std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
+                # standard deviation: std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
                 std+=ms['lambda']*(ms['stddevserv']**2 + ms['meanserv']**2)
                 lam_tot+=ms['lambda']
             if lam_tot!=0:
                 tserv=tserv/lam_tot
                 std=sqrt((std/lam_tot)-(tserv**2))
-                tserv=tserv/f['capacity']
-                std=std/f['capacity']
+                tserv=tserv/float(f['capacity'])
+                std=std/float(f['capacity'])
                 # compute mu and Cov for node
                 mu=1.0/tserv
                 cv=std/tserv
@@ -111,8 +110,6 @@ class OptSolution:
             for s in self.problem.get_microservice_list(sc=sc):
                 # get fog node id from service name
                 fidx=self.mapping[self.serviceidx[s]]
-                # print(fidx)
-                # print(self.mapping)
                 fname=self.fognames[fidx]
                 # add tresp for node where the service is located
                 tr+=self.fog[fidx]['tresp']
