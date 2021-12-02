@@ -112,15 +112,11 @@ class FogIndividual:
             for s in self.problem.get_microservice_list(sc=sc):
                 # get fog node id from service name
                 fidx=self.mapping[self.serviceidx[s]]
-                # print(fidx)
-                # print(self.mapping)
                 fname=self.fognames[fidx]
                 # add tresp for node where the service is located
                 tr+=self.fog[fidx]['tresp']
                 # add tnet for every node (except first)
-                # print('computing network delay for service', s)
                 if prevfog is not None:
-                    # print('network delay contribution', prevfog, fname)
                     tr+=self.problem.get_delay(prevfog, fname)['delay']
                 prevfog=fname
             rv[sc]={"resptime": tr}
