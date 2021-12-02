@@ -16,6 +16,7 @@ class FogIndividual:
         self.fog=[None] * self.nf
         self.compute_fog_status()
         self.resptimes=None
+        self.deltatime=None
 
     def get_service_idx(self):
         rv={}
@@ -138,7 +139,10 @@ class FogIndividual:
         #print('dumping solution')
         if self.resptimes is None:
             self.obj_func()
-        rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}}
+        if self.deltatime is not None:
+            rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'time': self.deltatime}
+        else:
+            rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}}
         # add services in each service chain
         for sc in self.problem.get_servicechain_list():
             rv['servicechain'][sc]['services']=self.problem.get_microservice_list(sc=sc)
@@ -155,8 +159,11 @@ class FogIndividual:
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
             rv['sensor'][s]=self.fognames[self.mapping[msidx]]
-        print(rv)
+        #print(rv)
         return rv
+    
+    def registertime(self, deltatime):
+        self.deltatime=deltatime
         
 if __name__ == "__main__":
     with open('sample_input.json',) as f:

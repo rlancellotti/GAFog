@@ -2,7 +2,7 @@
 import random
 import numpy
 import math
-import datetime
+import time
 from problem import Problem
 from fogindividual import FogIndividual
 from collections import namedtuple
@@ -18,6 +18,7 @@ from deap import algorithms
 
 numGen = 300    # number fo generations used in the GA
 numPop = 300    # initial number of individuals at gen0
+problem=None
 
 def obj_func(individual1):
     # FIXME: should remove this global dependency!
@@ -90,11 +91,6 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
 def dump_solution(gaout, sol):
     with open(gaout, "w+") as f:
             json.dump(sol.dump_solution(), f, indent=2)
-            # f.write("#type\tobjf\n")
-            # f.write("\"MG1-CV01\"\t%f\n" % sol.obj_func())
-            # print(sol.obj_func(), sol.network_time(), sol.processing_time(), sol.lambda_tot)
-
-problem=None
 
 def solve_problem(data):
     # FIXME: should remove this global dependency!
@@ -103,7 +99,10 @@ def solve_problem(data):
     mutpb = 0.3
     problem=Problem(data)
     toolbox=init_ga(problem)
+    ts=time.time()
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    deltatime=time.time()-ts
+    sol.registertime(deltatime)
     resp=data['response']
     if resp.startswith('file://'):
         dump_solution(resp.lstrip('file://'), sol)
