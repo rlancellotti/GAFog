@@ -42,7 +42,6 @@ class FogIndividual:
             # get list of services for that node
             serv=self.get_service_list(fidx)
             f=self.problem.get_fog(self.fognames[fidx])
-            # print(self.fognames[fidx], f, serv)
             # compute average service time for that node
             # compute stddev for that node
             tserv=0.0
@@ -52,10 +51,10 @@ class FogIndividual:
                 # get service data
                 ms=self.problem.get_microservice(s)
                 # print(ms)
-                # w_i=lam_i/lam_tot
-                # tserv=sum_i(w_i * tserv_i)
+                # compute weights: w_i=lam_i/lam_tot
+                # compute average service time: tserv=sum_i(w_i * tserv_i)
                 tserv+=ms['lambda']*ms['meanserv']
-                # std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
+                # compute stddev: std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
                 std+=ms['lambda']*(ms['stddevserv']**2 + ms['meanserv']**2)
                 lam_tot+=ms['lambda']
             if lam_tot!=0:
