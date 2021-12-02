@@ -1,6 +1,5 @@
 from problem import Problem
 from math import sqrt
-import statistics
 import json
 
 class OptSolution:
