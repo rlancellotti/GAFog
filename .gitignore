@@ -12,3 +12,5 @@ CharactService/__pycache__/*
 GraphOptService/__pycache__/*
 *.dot
 *.svg
+ProblemGen/sample_problem.json
+ChainOptService/sample_output.json

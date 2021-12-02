@@ -16,8 +16,8 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 
-numGen = 1    # number fo generations used in the GA
-numPop = 50    # initial number of individuals at gen0
+numGen = 300    # number fo generations used in the GA
+numPop = 300    # initial number of individuals at gen0
 
 def obj_func(individual1):
     # FIXME: should remove this global dependency!

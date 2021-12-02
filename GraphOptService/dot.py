@@ -1,7 +1,7 @@
 #!/usr/bin/python3
-from typing import Text
 from mako.template import Template
 from mako.runtime import Context
+import argparse
 import json
 import subprocess
 
@@ -18,12 +18,20 @@ def render_image(dotcode):
     return p.stdout
 
 if __name__ == '__main__':
-    fdata = 'sample_output.json'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--output', help='output file. Default graph.svg')
+    parser.add_argument('-f', '--file', help='input file. Default use sample_output.json')
+    args = parser.parse_args()
+    fdata = args.file if args.file is not None else 'sample_output.json'
     ftemplate = 'graph.dot.mako'
     with open(fdata, 'r') as f:
         data = json.load(f)
     out = process_template(ftemplate, data)
-    fout = get_filename(ftemplate)
-    with open(fout, 'w') as f:
-        f.write(out)
-    render_image(out)
+    fout = args.output if args.output is not None else 'graph.svg'
+    if fout.endswith('.svg'):
+        with open(fout, 'w') as f:
+            f.write(render_image(out))
+    if fout.endswith('.dot'):
+        with open(fout, 'w') as f:
+            f.write(out)
+        
