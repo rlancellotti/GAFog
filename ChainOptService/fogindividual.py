@@ -135,9 +135,9 @@ class FogIndividual:
         if self.resptimes is None:
             self.obj_func()
         if self.deltatime is not None:
-            rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'time': self.deltatime}
+            rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}, 'time': self.deltatime}
         else:
-            rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}}
+            rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}}
         # add services in each service chain
         for sc in self.problem.get_servicechain_list():
             rv['servicechain'][sc]['services']=self.problem.get_microservice_list(sc=sc)
@@ -154,6 +154,9 @@ class FogIndividual:
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
             rv['sensor'][s]=self.fognames[self.mapping[msidx]]
+        # FIXME: add fog status (rho)
+        for f in self.fog:
+            rv['fog'][f['name']]={'rho': f['rho']}
         #print(rv)
         return rv
     

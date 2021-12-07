@@ -1,13 +1,11 @@
 #!/usr/bin/python3
 import random
 import numpy
-import math
 import time
 from problem import Problem
 from fogindividual import FogIndividual
 from collections import namedtuple
 import json
-import sys
 import argparse
 import requests
 
@@ -16,8 +14,8 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 
-numGen = 300    # number fo generations used in the GA
-numPop = 300    # initial number of individuals at gen0
+numGen = 2000    # number fo generations used in the GA
+numPop = 2000    # initial number of individuals at gen0
 problem=None
 
 def obj_func(individual1):
