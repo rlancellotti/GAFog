@@ -89,7 +89,10 @@ class FogIndividual:
         if mu > lam:
             return 1 / (mu - lam)
         else:
-            return (1 / mu) * (1 / (1 - self.problem.maxrho))
+            # if overloaded, the penalty is proportional to rho
+            # this should guide the GA towards acceptable solutions
+            rho=lam/mu
+            return (rho / mu) * (1 / (1 - self.problem.maxrho))
 
     def mg1_time(self, lam, mu, cv):
         if mu==0:
@@ -100,7 +103,9 @@ class FogIndividual:
         if mu > lam:
             return (1 / mu) * (1+((1+cv2)/2)*(rho/(1-rho)))
         else:
-            return (1 / mu) * (1 / (1 - self.problem.maxrho))
+            # if overloaded, the penalty is proportional to rho
+            # this should guide the GA towards acceptable solutions
+            return (rho / mu) * (1 / (1 - self.problem.maxrho))
 
     def compute_performance(self):
         rv = {}
