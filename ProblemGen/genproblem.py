@@ -50,7 +50,7 @@ def get_network(config):
 
 def get_sensor(config):
     n_chain=int(config['nchain'])
-    lam=(float(config['rho']) * float(config['nfog']))/(float(config['tchain']) * n_chain**2)
+    lam=(float(config['rho']) * float(config['nfog']))/(float(config['tchain']) * n_chain)
     sensor={}
     for c in range(n_chain):
         # each service chain has a sensor
@@ -129,7 +129,7 @@ if __name__ == "__main__":
             'nsrv_chain': 5,
             'nfog': 5,
             'tchain': 10.0,
-            'rho': 0.7,
+            'rho': 0.6,
             'enable_network': True,
             'response': 'file://sample_output.json'
         }

@@ -14,8 +14,8 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 
-numGen = 2000    # number fo generations used in the GA
-numPop = 2000    # initial number of individuals at gen0
+numGen = 600    # number fo generations used in the GA
+numPop = 600    # initial number of individuals at gen0
 problem=None
 
 def obj_func(individual1):
@@ -50,6 +50,11 @@ def cx_uniform_fog(ind1,ind2,indpb):
 def init_ga(problem):
     # Initialization
     toolbox = base.Toolbox()
+    try:
+        del creator.FitnessMin
+        del creator.Individual
+    except AttributeError:
+        pass
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     toolbox.register("individual",load_individuals, creator.Individual, problem)
