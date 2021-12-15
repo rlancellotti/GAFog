@@ -7,7 +7,9 @@ fogconfig.json
 *.data
 ChainOptService/__pycache__/*
 VNSOptService/__pycache__/*
-CharactService/__pycache__/*
+CharactService/app/__pycache__/*
+CharactService/app/venv/*
+ChainOptService/venv/*
 GraphOptService/__pycache__/*
 ProblemGen/__pycache__/*
 *.dot
