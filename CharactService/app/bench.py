@@ -5,72 +5,83 @@ import time
 import statistics
 from pathlib import Path
 
+init_t = []
+final_t = []
+
+result_data = {}
 
 def exec_test(data):
-    #testFile = open("./samples/sample_input2.json", )
-    #data = json.load(testFile)
-    feedbck_location = data['feedbck_location']
-    serv_location = data['serv_location']
-    json_data = data['json_data']
-
-    if serv_location == '' or json_data == '' or feedbck_location == '':
+    # TODO: better error reporting
+    if not verify_data(data):
         return 0
     
-    # Add/update response field in JSON obj
-    json_data['response'] = feedbck_location
-    start_t_file = open("Init_Timestamps.txt", "a")
+    # TODO: add use case where feedback location is "passed" to the
+    #       tested service
+    req_fdbck = data['req_fdbck']
+    feedbck_location = data['feedbck_location']
+    serv_location = data['serv_location']
+    # number of times for the test to be run
+    num_runs = data['num_runs']
+    json_data = data['json_data']
+    
+    timing_arr = []
 
-    for iter in range(0, 10):
-        # Send request to micros. API
+    for iter in range(0, num_runs):
+        # Send request to micros. API location
+        
         start = datetime.now()
-        #r = requests.post("http://gafog:8080/api/v1.0/ga", json=data)
+        init_t.append(start)
         r = requests.post(serv_location, json=json_data)
+        if not req_fdbck:
+            stop = datetime.now()
+            final_t.append(stop)
+
         if r.status_code != 201:
             return 0
         else:
-            start_t_file.write(str(start) + "\n")
-            time.sleep(2)
+            time.sleep(1)
 
-    start_t_file.close()
-    return compute_results()
+    # start_t_file.close()
+    return compute_results(num_runs)
 
-
-def compute_results():
-    # Open timestamp files
+def compute_results(runs):
+    # wait if we haven't received all responses yet
+    while (len(init_t)!= len(final_t)):
+        print("init len " + str(len(init_t)) + " final len " + str(len(final_t)))
+        time.sleep(1)
     
-    start_file = open("Init_Timestamps.txt", "r")
-    start_times = start_file.readlines()
-    end_file = open("Final_Timestamps.txt", "r")
-    end_times = end_file.readlines()
-    results = open("Results.json", "r")
-    json_data = json.load(results)
-
-    # To datetime format
-    start_times = parse_time(start_times)
-    end_times = parse_time(end_times)
     deltas = []
-    for i in range(0,10):
-        deltas.append((end_times[i] - start_times[i]).total_seconds())
+    
+    for i in range(0, runs):
+        deltas.append((final_t[i] - init_t[i]).total_seconds())
 
     avg = statistics.mean(deltas)
     stddev = statistics.stdev(deltas)
-    output = {"output": json_data}
+    output = {"output": result_data}
     output["average"] = avg
     output["stddev"] = stddev
 
     return output
 
+# Check if required fields are in the input JSON data
+def verify_data(data):
+    if "req_fdbck" not in data:
+        return 0
+    if "serv_location" not in data:
+        return 0
+    if "json_data" not in data:
+        return 0
+    if "num_runs" not in data:
+        return 0
+    return 1
+
 
 def save_execution(data):
     timestamp = datetime.now()
-    final_t_file = open("Final_Timestamps.txt", "a")
-    final_t_file.write(str(timestamp) + "\n")
-    final_t_file.close()
-    computed_file = Path("./Results.json")
-    if not computed_file.exists():
-        computed_file = open("Results.json", "w")
-        computed_file.write(json.dumps(data))
-        computed_file.close()
+    final_t.append(timestamp)
+   
+    global result_data
+    result_data = data
 
 def parse_time(string_list):
     temp = []
