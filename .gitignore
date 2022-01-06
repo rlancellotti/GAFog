@@ -18,3 +18,5 @@ output_*.json
 ProblemGen/*.png
 ProblemGen/*.gnuplot
 
+ProblemGen/*.tgz
+ProblemGen/*.zip
