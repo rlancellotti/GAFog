@@ -2,6 +2,7 @@
 import argparse
 import numpy
 import json
+import sys
 
 def get_net_id(i, j, n):
     if i>j:
@@ -118,6 +119,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', help='output file. Default sample_problem.json')
     parser.add_argument('-c', '--config', help='config file. Default use default config')
+    parser.add_argument('-s', '--solve',  action='store_true', help='solve problem')
     args = parser.parse_args()
     oname=args.output if args.output is not None else 'sample_problem.json'
     if args.config is not None:
@@ -125,17 +127,22 @@ if __name__ == "__main__":
             config=json.load(f)
     else:
         config={
-            'nchain': 2,
-            'nsrv_chain': 5,
-            'nfog': 5,
-            'tchain': 10.0,
-            'rho': 0.6,
-            'enable_network': True,
+            'nchain': 1,
+            'nsrv_chain': 2,
+            'nfog': 4,
+            'tchain': 1.0,
+            'rho': 0.2,
+            'enable_network': False,
             'response': 'file://sample_output.json'
         }
     fname=args.file if args.output is not None else 'sample_problem.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
         data = json.dump(prob, f, indent=2)
+    if args.solve:
+        sys.path.append('../ChainOptService')
+        from ga import solve_problem
+        solve_problem(prob)
+
 
 

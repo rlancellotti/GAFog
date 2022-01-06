@@ -7,10 +7,12 @@ strict digraph {
 %for sc in mapping['servicechain']:
         subgraph cluster_${sc} {
             label="${sc}"
-            ${mapping['servicechain'][sc]['services'][0]}
-%for sidx, s in enumerate(mapping['servicechain'][sc]['services']):
-%if sidx+1 < len(mapping['servicechain'][sc]['services']):
-            ${s} -> ${mapping['servicechain'][sc]['services'][sidx+1]}
+<%
+    servicelist=list(mapping['servicechain'][sc]['services'].keys())
+%>
+%for sidx, s in enumerate(servicelist):
+%if sidx+1 < len(servicelist):
+          ${s} -> ${servicelist[sidx+1]}
 %endif
 %endfor
 
@@ -42,7 +44,7 @@ strict digraph {
         edge [color=blue]
 %for sc in mapping['servicechain']:
 %for s in mapping['servicechain'][sc]['sensors']:
-            ${s} -> ${mapping['servicechain'][sc]['services'][0]}
+            ${s} -> ${list(mapping['servicechain'][sc]['services'].keys())[0]}
 %endfor
 %endfor
     }

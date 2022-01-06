@@ -145,13 +145,15 @@ class FogIndividual:
             rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}}
         # add services in each service chain
         for sc in self.problem.get_servicechain_list():
-            rv['servicechain'][sc]['services']=self.problem.get_microservice_list(sc=sc)
+            rv['servicechain'][sc]['services']={}
             rv['servicechain'][sc]['sensors']=[]
+            for ms in self.problem.get_microservice_list(sc=sc):
+                rv['servicechain'][sc]['services'][ms]=self.problem.get_microservice(ms)
         #add sensors connected to each service chain
         for s in self.problem.get_sensor_list():
             sc=self.problem.get_chain_for_sensor(s)
             rv['servicechain'][sc]['sensors'].append(s)
-        # add sensor list for each service chain
+        rv['servicechain'][sc]['lambda']=self.problem.servicechain[sc]['lambda']
         #print(self.mapping)
         #print(self.obj_func())
         for msidx in range(self.nsrv):
@@ -159,9 +161,8 @@ class FogIndividual:
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
             rv['sensor'][s]=self.fognames[self.mapping[msidx]]
-        # FIXME: add fog status (rho)
         for f in self.fog:
-            rv['fog'][f['name']]={'rho': f['rho']}
+            rv['fog'][f['name']]={'rho': f['rho'], 'capacity': self.problem.get_fog(f['name'])['capacity']}
         #print(rv)
         return rv
     
