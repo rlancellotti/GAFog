@@ -8,11 +8,14 @@ strict digraph {
         subgraph cluster_${sc} {
             label="${sc}"
 <%
-    servicelist=list(mapping['servicechain'][sc]['services'].keys())
+it=iter(mapping['servicechain'][sc]['services'])
 %>
-%for sidx, s in enumerate(servicelist):
-%if sidx+1 < len(servicelist):
-          ${s} -> ${servicelist[sidx+1]}
+%for s in it:
+<%
+    nxt=next(it, None)
+%>
+%if nxt is not None:
+          ${s} -> ${nxt}
 %endif
 %endfor
 
