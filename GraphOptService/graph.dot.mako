@@ -7,13 +7,9 @@ strict digraph {
 %for sc in mapping['servicechain']:
         subgraph cluster_${sc} {
             label="${sc}"
-<%
-it=iter(mapping['servicechain'][sc]['services'])
-%>
+<% it=iter(mapping['servicechain'][sc]['services']) %>
 %for s in it:
-<%
-    nxt=next(it, None)
-%>
+<% nxt=next(it, None) %>
 %if nxt is not None:
           ${s} -> ${nxt}
 %endif
