@@ -10,5 +10,5 @@ RUN pip install -r requirements.txt
 
 EXPOSE 7777
 
-CMD ["python", "flask_app.py"]
+CMD ["python", "flask_app_alt.py"]
 
