@@ -49,8 +49,8 @@ class Benchmark:
                 r = requests.post(serv_location, json=json_data)
                 self.sync_save(r)
             
-            if r.status_code != 201:
-                return "Service request returned " + str(r.status_code) + " status code"
+            if r.status_code not in [200, 201, 204]:
+                return "Error: tested service returned unexpected  " + str(r.status_code) + " status code"
             else:
                 time.sleep(1)
         output = self.testData.computeRunTimes()
@@ -59,7 +59,8 @@ class Benchmark:
     def sync_save(self, request):
         if self.synced == "sync":
             self.testData.addFinTimestamp(datetime.now())
-            self.testData.addResponse(json.loads(request.content.decode('utf8')))
+            #self.testData.addResponse(json.loads(request.content.decode('utf8')))
+            self.testData.addResponse(self.parse_response(request))
 
     def save_execution(self, data):
         if self.synced == "async":
@@ -70,3 +71,12 @@ class Benchmark:
     def clear_data(self):
         self.testData = TestData()
         self.testData.clearData()
+
+    def parse_response(self, request):
+        # Check response format
+        if "text" in request.headers["Content-Type"]:
+            return request.content.decode(request.headers["Content-Type"].split("charset=")[1])
+        if "json" in request.headers["Content-Type"]:
+            return json.loads(request.content.decode('utf8'))
+        else:
+            return "Response could not be parsed correctly"

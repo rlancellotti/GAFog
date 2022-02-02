@@ -23,6 +23,7 @@ def save_results():
         data = request.get_json()
         bench.save_execution(data)
         return {'message': 'Execution Time  and data Saved'}, 201
+    # TODO? Support different requuest types on this side of API
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7777)
