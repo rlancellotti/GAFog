@@ -17,6 +17,7 @@ class FogIndividual:
         self.compute_fog_status()
         self.resptimes=None
         self.deltatime=None
+        self.conv_gen=None
 
     def get_service_idx(self):
         rv={}
@@ -35,6 +36,12 @@ class FogIndividual:
             if self.mapping[s]==fidx:
                 rv.append(self.service[s])
         return rv
+
+    def get_convergence_gen(self):
+        return self.conv_gen
+
+    def set_convergence_gen(self, convgen):
+        self.conv_gen=convgen
 
     def compute_fog_status(self):
         # for each fog node

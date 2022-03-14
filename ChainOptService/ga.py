@@ -14,8 +14,10 @@ from deap import creator
 from deap import tools
 from deap import algorithms
 
-numGen = 600    # number fo generations used in the GA
-numPop = 600    # initial number of individuals at gen0
+#numGen = 600    # number fo generations used in the GA
+#numPop = 600    # initial number of individuals at gen0
+numGen = 60    # number fo generations used in the GA
+numPop = 60    # initial number of individuals at gen0
 problem=None
 
 def obj_func(individual1):
@@ -66,6 +68,19 @@ def init_ga(problem):
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
+
+def get_convergence(log, min_obj, eps=0.01):
+    #gen=log.select("gen")
+    stds=log.select("std")
+    mins=log.select("min")
+    convgen=-1
+    for i in range(len(mins)):
+        if (convgen<0) and ((mins[i]/min_obj)-1.0 <eps):
+            convgen=i
+        print(mins[i], stds[i])
+    print(convgen)
+    return convgen
+
 def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     # FIXME: should remove this global dependency!
     # GA solver
@@ -85,6 +100,8 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
                                    stats=stats, halloffame=hof, verbose=False)
     best=FogIndividual(hof[0], problem)
+    convergence=get_convergence(log, best.obj_func())
+    best.set_convergence_gen(convergence)
     #gen=log.select("gen")
     #mins=log.select("min")
     #stds=log.select("std")
