@@ -6,5 +6,6 @@ Joint work with university of Bologna
 - GraphOptService: service to create a graphic representation of a serice chain deployment (Graphviz .dot file or .svg image)
 
 ## Other relevant functions
+- FogProblem general framework to define problem and solutions. Includes objective function, ability to read/dump data in JSON format
 - VNSOptService: not-yet working service to implement a Variable Neighborhood Search algorithm top optimize deployment of microservices
 - MM1-MG1-Omnet: GA-based algorithm to design the deployment scheme of a fog infrastructure and simulate its performance using Omnet++

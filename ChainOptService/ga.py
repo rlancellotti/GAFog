@@ -2,12 +2,14 @@
 import random
 import numpy
 import time
-from problem import Problem
-from fogindividual import FogIndividual
-from collections import namedtuple
+import sys
 import json
 import argparse
 import requests
+from collections import namedtuple
+sys.path.append('../FogProblem')
+from problem import Problem
+from fogindividual import FogIndividual
 
 from deap import base
 from deap import creator
@@ -71,14 +73,14 @@ def init_ga(problem):
 
 def get_convergence(log, min_obj, eps=0.01):
     #gen=log.select("gen")
-    stds=log.select("std")
+    #stds=log.select("std")
     mins=log.select("min")
     convgen=-1
     for i in range(len(mins)):
         if (convgen<0) and ((mins[i]/min_obj)-1.0 <eps):
             convgen=i
-        print(mins[i], stds[i])
-    print(convgen)
+        #print(mins[i], stds[i])
+    #print(convgen)
     return convgen
 
 def solve_ga_simple(toolbox, cxbp, mutpb, problem):

@@ -128,7 +128,7 @@ if __name__ == "__main__":
     else:
         config={
             'nchain': 1,
-            'nsrv_chain': 2,
+            'nsrv_chain': 5,
             'nfog': 4,
             'tchain': 1.0,
             'rho': 0.2,

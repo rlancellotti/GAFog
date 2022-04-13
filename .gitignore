@@ -12,6 +12,7 @@ CharactService/app/venv/*
 ChainOptService/venv/*
 GraphOptService/__pycache__/*
 ProblemGen/__pycache__/*
+FogProblem/__pycache__/*
 *.dot
 *.svg
 ProblemGen/sample_problem.json
