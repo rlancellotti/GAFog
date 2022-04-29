@@ -170,6 +170,8 @@ class Solution:
         for f in self.fog:
             rv['fog'][f['name']]={'rho': f['rho'], 'capacity': self.problem.get_fog(f['name'])['capacity']}
         rv['extra']=self.extra_param
+        if not self.problem.network_is_fake:
+            rv['network']=self.problem.network_as_matrix()
         #print(rv)
         return rv
             
