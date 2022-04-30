@@ -73,13 +73,14 @@ def init_ga(problem):
 
 def get_convergence(log, min_obj, eps=0.01):
     #gen=log.select("gen")
-    #stds=log.select("std")
+    stds=log.select("std")
     mins=log.select("min")
     convgen=-1
     for i in range(len(mins)):
-        if (convgen<0) and ((mins[i]/min_obj)-1.0 <eps):
+        if ((mins[i]/min_obj)-1.0 <eps):
             convgen=i
-        #print(mins[i], stds[i])
+            #print(mins[i], stds[i], convgen)
+            break
     #print(convgen)
     return convgen
 
@@ -104,6 +105,8 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     best=FogIndividual(hof[0], problem)
     convergence=get_convergence(log, best.obj_func())
     best.set_convergence_gen(convergence)
+    best.set_extra_param('max_gen', numGen)
+    best.set_extra_param('population', numPop)
     #gen=log.select("gen")
     #mins=log.select("min")
     #stds=log.select("std")
