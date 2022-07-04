@@ -11,6 +11,9 @@ CharactService/app/__pycache__/*
 CharactService/app/venv/*
 ChainOptService/venv/*
 GraphOptService/__pycache__/*
+GraphOptService/*.png
+GraphOptService/*.dot
+GraphOptService/*.svg
 ProblemGen/__pycache__/*
 FogProblem/__pycache__/*
 *.dot
@@ -23,3 +26,5 @@ ProblemGen/*.gnuplot
 
 ProblemGen/*.tgz
 ProblemGen/*.zip
+GA.code-workspace
+FogProblem/sample_output*.json
