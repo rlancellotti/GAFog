@@ -7,11 +7,9 @@ strict digraph {
 %for sc in mapping['servicechain']:
         subgraph cluster_${sc} {
             label="${sc}"
-<% it=iter(mapping['servicechain'][sc]['services']) %>
-%for s in it:
-<% nxt=next(it, None) %>
-%if nxt is not None:
-          ${s} -> ${nxt}
+%for n, s in enumerate(mapping['servicechain'][sc]['services'].keys()):
+%if n!= len(mapping['servicechain'][sc]['services'])-1:
+          ${s} -> ${list(mapping['servicechain'][sc]['services'].keys())[n+1]}
 %endif
 %endfor
 

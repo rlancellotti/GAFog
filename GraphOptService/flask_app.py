@@ -16,7 +16,7 @@ def make_dot():
     return {'message': 'Request must be JSON'}, 415
 
 @app.post("/api/v1.0/graph.svg")
-def make_svf():
+def make_svg():
     if request.is_json:
         data = request.get_json()
         out = render_image(process_template(ftemplate, data))

@@ -12,9 +12,10 @@ def process_template(ftemplate, sol):
     mytemplate=Template(filename=ftemplate)
     return mytemplate.render(mapping=sol)
 
-def render_image(dotcode, type='svg'):
+def render_image(dotcode, outtype='svg'):
     #subprocess.run(['dot', dotfile, '-Tsvg', '-O'])
-    p = subprocess.run(['dot', '-T%s'%type], input=bytearray(dotcode.encode()), capture_output=True)
+    print(outtype)
+    p = subprocess.run(['dot', '-T%s'%outtype], input=bytearray(dotcode.encode()), capture_output=True)
     return p.stdout
 
 if __name__ == '__main__':
@@ -32,6 +33,6 @@ if __name__ == '__main__':
         with open(fout, 'w') as f:
             f.write(out)
     else:
-        type=pathlib.Path(fout).suffix
+        outtype=pathlib.Path(fout).suffix.strip('.')
         with open(fout, 'wb') as f:
-            f.write(render_image(out))        
+            f.write(render_image(out, outtype))        
