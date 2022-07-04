@@ -14,7 +14,6 @@ def process_template(ftemplate, sol):
 
 def render_image(dotcode, outtype='svg'):
     #subprocess.run(['dot', dotfile, '-Tsvg', '-O'])
-    print(outtype)
     p = subprocess.run(['dot', '-T%s'%outtype], input=bytearray(dotcode.encode()), capture_output=True)
     return p.stdout
 

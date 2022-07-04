@@ -20,19 +20,39 @@ strict digraph {
         subgraph cluster_fog {
             label="Fog nodes"
             style="dashed"
-            node [shape=box] 
-%for s in mapping['microservice']:
-            ${mapping['microservice'][s]}
+            node [shape=box]
+            {rank = same; \
+%for f in mapping['fog'].keys():
+${f} \
+%endfor
+}
+            \
+%for f in mapping['fog'].keys():
+${f} \
+%if loop.last:
+[ style=invis ]
+%else:
+-> \
+%endif
 %endfor
         }
         subgraph cluster_sensor {
             style="dashed"
             label="Sensors"
-            node [shape=circle] 
-%for sc in mapping['servicechain']:
-%for s in mapping['servicechain'][sc]['sensors']:
-            ${s}
+            node [shape=circle]
+            {rank = same; \
+%for s in mapping['sensor']:
+${s} \
 %endfor
+}
+            \
+%for s in mapping['sensor']:
+${s} \
+%if loop.last:
+[ style=invis ] 
+%else:
+-> \
+%endif
 %endfor
         }
     }
@@ -56,7 +76,7 @@ strict digraph {
     subgraph {
         edge [style=dashed, color=orange]
 %for s in mapping['sensor']:
-        ${s} -> ${mapping['sensor'][s]}
+        ${s} -> ${mapping['sensor'][s]} 
 %endfor
     }
 }
