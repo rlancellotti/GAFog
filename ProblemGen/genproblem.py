@@ -96,7 +96,7 @@ def get_microservice(config):
             sname='MS%d_%d'%(c+1,ns)
             # compute service time
             t_srv=ts[ns]-ts[ns-1]
-            microservice[sname]={"meanserv": t_srv, "stddevserv": 0.1*t_srv}
+            microservice[sname]={"meanserv": t_srv, "stddevserv": 1.0*t_srv}
     return microservice
 
 def get_problem(config):
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             'nfog': 4,
             'tchain': 1.0,
             'rho': 0.2,
-            'enable_network': False,
+            'enable_network': True,
             'response': 'file://sample_output.json'
         }
     fname=args.file if args.output is not None else 'sample_problem.json'
