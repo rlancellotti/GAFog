@@ -150,3 +150,15 @@ run_experiment('nsrv_chain', nservices, nrun, config, -1, 'sens_nsrv_chain.data'
 run_experiment('rho', rhos, nrun, config, 10, 'sens_rho.data')
 config['nsrv_chain']=10
 run_experiment('nfog', nfogs, nrun, config, -1, 'sens_nfog.data')
+
+config={
+    'nchain_fog': 1/3,
+    'nsrv_chain': 3,
+    'nfog': 3,
+    'tchain': 10.0,
+    'rho': 0.3,
+    'enable_network': True,
+    'response': 'file://sample_output.json'
+}
+
+run_experiment('nfog', [3], 1, config, -1, 'sample.data')
