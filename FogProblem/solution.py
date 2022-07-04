@@ -1,5 +1,6 @@
 from problem import Problem
 from math import sqrt
+import sys
 import json
 
 class Solution:
@@ -15,6 +16,9 @@ class Solution:
         self.fog=[None] * self.nf
         self.compute_fog_status()
         self.resptimes=None
+        self.queueingtimes=None
+        self.waitingtimes=None
+        self.servicetimes=None
         self.deltatime=None
         self.extra_param={}
 
@@ -53,6 +57,7 @@ class Solution:
             f=self.problem.get_fog(self.fognames[fidx])
             # compute average service time for that node
             # compute stddev for that node
+            # compute output inter-leaving time and stddev
             tserv=0.0
             std=0.0
             lam_tot=0.0
@@ -72,49 +77,68 @@ class Solution:
                 tserv=tserv/f['capacity']
                 std=std/f['capacity']
                 # compute mu and Cov for node
-                mu=1.0/tserv
                 cv=std/tserv
+                mu=1.0/tserv
                 rho=lam_tot/mu
+                twait=self.mg1_waittime(lam_tot, mu, cv)
+                # print(self.fognames[fidx], tserv, std, rho, twait)
             else:
                 tserv=0
                 std=0
                 mu=0
                 cv=0
                 rho=0
+                twait=0
             self.fog[fidx]={
+                'capacity': f['capacity'],
                 'name': self.fognames[fidx],
                 'tserv': tserv, 
                 'stddev': std, 
                 'mu': mu, 
                 'cv': cv,
                 'lambda': lam_tot,
-                'tresp': self.mg1_time(lam_tot, mu, cv),
+                'twait': twait,
+                'tresp': twait+tserv,
                 'rho': rho
             }
             # print(self.fog[fidx])
-        
-    def mm1_time(self, lam, mu):
-        # classical M/M/1 formula
-        if mu > lam:
-            return 1 / (mu - lam)
-        else:
-            # if overloaded, the penalty is proportional to rho
-            # this should guide the GA towards acceptable solutions
-            rho=lam/mu
-            return (rho / mu) * (1 / (1 - self.problem.maxrho))
 
-    def mg1_time(self, lam, mu, cv):
+    def overload_waittime(self, mu, rho):
+        # if overloaded, the penalty is proportional to rho
+        # this should guide the GA towards acceptable solutions
+        return (rho / mu) * (self.problem.maxrho / (1 - self.problem.maxrho))
+
+    def mm1_waittime(self, lam, mu):
+        # classical M/M/1 formula
+        rho=lam/mu
+        if mu > lam:
+            return rho / (1-rho)
+        else:
+            return self.overload_waittime(mu, rho)
+
+    def mg1_waittime(self, lam, mu, cv):
         if mu==0:
             return 0
-        # M/G/1 Pollaczek-Khinchine formula
+        # M/G/1 Pollaczek-Khinchin formula
         rho=lam/mu
-        cv2=cv*cv
         if mu > lam:
-            return (1 / mu) * (1+((1+cv2)/2)*(rho/(1-rho)))
+            rv=(1.0 / mu) * ((1.0+cv**2)/2.0)*(rho/(1.0-rho))
+            # print(f'   M/G/1(tserv={1.0/mu}, cv={cv}, rho={rho})={rv}')
         else:
-            # if overloaded, the penalty is proportional to rho
-            # this should guide the GA towards acceptable solutions
-            return (rho / mu) * (1 / (1 - self.problem.maxrho))
+            rv=self.overload_waittime(mu, rho)
+        return rv
+
+    def gg1_waittime(self, lam, mu, cva, cvs):
+        if mu==0:
+            return 0
+        # G/G/1 Allen-Cuneen formula
+        rho=lam/mu
+        if mu > lam:
+            rv=(1.0 / mu) * ((cva**2+cvs**2)/2.0)*(rho/(1.0-rho))
+            print(f'   G/G/1(tserv={1.0/mu}, cva={cva}, cvs={cvs}, rho={rho})={rv}')
+        else:
+            rv=self.overload_waittime(mu, rho)
+        return rv
 
     def compute_performance(self):
         rv = {}
@@ -122,18 +146,24 @@ class Solution:
         for sc in self.problem.get_servicechain_list():
             prevfog=None
             tr=0.0
+            twait=0.0
+            tnet=0.0
+            tsrv=0.0
             # for each service
             for s in self.problem.get_microservice_list(sc=sc):
                 # get fog node id from service name
                 fidx=self.mapping[self.serviceidx[s]]
                 fname=self.fognames[fidx]
                 # add tresp for node where the service is located
-                tr+=self.fog[fidx]['tresp']
+                tr+=self.fog[fidx]['twait']
+                tsrv+=self.problem.get_microservice(s)['meanserv']/self.fog[fidx]['capacity']
+                twait+=self.fog[fidx]['twait']
                 # add tnet for every node (except first)
                 if prevfog is not None:
                     tr+=self.problem.get_delay(prevfog, fname)['delay']
+                    tnet+=self.problem.get_delay(prevfog, fname)['delay']
                 prevfog=fname
-            rv[sc]={"resptime": tr}
+            rv[sc]={'resptime': twait+tsrv+tnet, 'resptime_old': tr, 'waittime': twait, 'servicetime': tsrv, 'networktime': tnet}
         return rv
 
     def obj_func(self):
@@ -145,7 +175,7 @@ class Solution:
         return tr_tot
     
     def dump_solution(self):
-        #print('dumping solution')
+        # print('dumping solution')
         if self.resptimes is None:
             self.obj_func()
         rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}}
@@ -155,35 +185,50 @@ class Solution:
             rv['servicechain'][sc]['sensors']=[]
             for ms in self.problem.get_microservice_list(sc=sc):
                 rv['servicechain'][sc]['services'][ms]=self.problem.get_microservice(ms)
-        #add sensors connected to each service chain
+            src={'startTime': 0, 'stopTime': -1, 'lambda': self.problem.servicechain[sc]['lambda']}
+            rv['servicechain'][sc]['sources']=[src]
+        # add sensors connected to each service chain
         for s in self.problem.get_sensor_list():
             sc=self.problem.get_chain_for_sensor(s)
             rv['servicechain'][sc]['sensors'].append(s)
-        rv['servicechain'][sc]['lambda']=self.problem.servicechain[sc]['lambda']
-        #print(self.mapping)
-        #print(self.obj_func())
+        # print(self.mapping)
+        # print(self.obj_func())
         for msidx in range(self.nsrv):
             rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
             rv['sensor'][s]=self.fognames[self.mapping[msidx]]
         for f in self.fog:
-            rv['fog'][f['name']]={'rho': f['rho'], 'capacity': self.problem.get_fog(f['name'])['capacity']}
+            rv['fog'][f['name']]={
+                'rho': f['rho'], 
+                'capacity': self.problem.get_fog(f['name'])['capacity'],
+                'tserv': f['tserv'],
+                'stddev': f['stddev'], 
+                'mu': f['mu'], 
+                'cv': f['cv'],
+                'lambda': f['lambda'],
+                'twait': f['twait'],
+                }
         rv['extra']=self.extra_param
         if not self.problem.network_is_fake:
             rv['network']=self.problem.network_as_matrix()
-        #print(rv)
+        # print(rv)
         return rv
             
 if __name__ == "__main__":
-    with open('sample_input.json',) as f:
-        data = json.load(f)
-    print('problem objct')
-    p=Problem(data)
-    print(p)
-    for mapping in [[0, 1, 1], [1, 1, 0]]:
-        print('individual objct ', mapping)
-        i=Solution(mapping, p)
-        # print('obj_func= ' + str(i.obj_func()))
-        print(json.dumps(i.dump_solution(), indent=2))
+    fin='sample_input_sim.json' if len(sys.argv)==1 else sys.argv[1]
+    print('reading from:', fin)
+    with open(fin,) as f:
+        prob_data = json.load(f)
+    p=Problem(prob_data)
+    print('problem object:', p)
+    #mappings=[([0, 1, 1], '011'), ([1, 1, 0], '110')]
+    mappings=[([0, 0, 1, 1], '0011'), ([0, 1, 0, 1], '0101'), ([0, 1, 1, 0], '0110')]
+    for (mapping, mname) in mappings:
+        fname=f'sample_output_{mname}.json'
+        print(f'individual objct {mapping} -> {fname}')
+        sol=Solution(mapping, p)
+        with open(fname, 'w') as f:
+            json.dump(sol.dump_solution(), f, indent=2)
+            # print(json.dumps(sol.dump_solution(), indent=2))
 
