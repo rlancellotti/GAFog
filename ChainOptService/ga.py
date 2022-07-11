@@ -1,39 +1,43 @@
 #!/usr/bin/python3
 import random
+import sys
 import numpy
 import time
-import sys
 import json
 import argparse
 import requests
-from collections import namedtuple
-sys.path.append('../FogProblem')
-from problem import Problem
-from fogindividual import FogIndividual
-
 from deap import base
 from deap import creator
 from deap import tools
 from deap import algorithms
 
+sys.path.append('../FogProblem')
+from problem import Problem
+from solution import Solution
+from fogindividual import FogIndividual
+
+
+
 #numGen = 600    # number fo generations used in the GA
 #numPop = 600    # initial number of individuals at gen0
-numGen = 60    # number fo generations used in the GA
-numPop = 60    # initial number of individuals at gen0
-problem=None
+numGen  = 60     # number fo generations used in the GA
+numPop  = 60     # initial number of individuals at gen0
+problem = None
 
+# Given an individual returns the value in the obj function
 def obj_func(individual1):
     # FIXME: should remove this global dependency!
     global problem
-    ind=FogIndividual(individual1, problem)
+    ind = FogIndividual(individual1, problem)
     return ind.obj_func(),
 
-def load_individuals(creator, problem):
+def load_individuals(creator, problem:Problem):
     individual = list()
     for i in range(problem.get_nservice()):
         individual.append(random.randint(0,problem.get_nfog()-1))
     return creator(individual)
         
+# Mutation of an individual
 def mut_uniform_fog(individual, indpb):
     # FIXME: should remove this global dependency!
     global problem
@@ -42,7 +46,8 @@ def mut_uniform_fog(individual, indpb):
             individual[i] = random.randint(0,problem.get_nfog()-1)
     return individual,
 
-def cx_uniform_fog(ind1,ind2,indpb):
+# Mating of two individual
+def cx_uniform_fog(ind1, ind2, indpb):
     # FIXME: should remove this global dependency!
     global problem
     size = min(len(ind1), len(ind2))
@@ -51,14 +56,16 @@ def cx_uniform_fog(ind1,ind2,indpb):
             ind1[i], ind2[i] = ind2[i], ind1[i]
     return ind1, ind2
 
-def init_ga(problem):
-    # Initialization
+# Population's initialization for the GA 
+def init_ga(problem:Problem):
     toolbox = base.Toolbox()
     try:
         del creator.FitnessMin
         del creator.Individual
     except AttributeError:
         pass
+
+    # Creation of population and individuals
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
     toolbox.register("individual",load_individuals, creator.Individual, problem)
@@ -70,26 +77,34 @@ def init_ga(problem):
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
-
-def get_convergence(log, min_obj, eps=0.01):
-    #gen=log.select("gen")
-    #stds=log.select("std")
-    mins=log.select("min")
-    convgen=-1
+"""
+Given the best individual in the population
+returns the convergence of the GA problem
+"""
+def get_convergence(log, min_obj:FogIndividual.obj_func, eps=0.01):
+    #gen = log.select("gen")
+    #stds = log.select("std")
+    mins = log.select("min")
+    convgen =- 1
     for i in range(len(mins)):
         if (convgen<0) and ((mins[i]/min_obj)-1.0 <eps):
-            convgen=i
+            convgen = i
         #print(mins[i], stds[i])
     #print(convgen)
     return convgen
 
-def solve_ga_simple(toolbox, cxbp, mutpb, problem):
+""" 
+GA solver where:
+ - cbxp is the probability of mating two individuals
+ - mutpb the probability of mutating an individual
+"""
+def solve_ga_simple(toolbox:base.Toolbox, cxbp, mutpb, problem:Problem):
     # FIXME: should remove this global dependency!
-    # GA solver
     global numPop, numGen
     pop = toolbox.population(n=numPop)
     # save best solution in Hall of Fame
     hof = tools.HallOfFame(1)
+    
     # initialize Logbook to save statistics
     # https://deap.readthedocs.io/en/master/tutorials/basic/part3.html
     log = tools.Logbook()
@@ -98,11 +113,12 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     stats.register("std", numpy.std)
     stats.register("min", numpy.min)
     stats.register("max", numpy.max)
+   
     # Change verbose parameter to see population evolution
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
                                    stats=stats, halloffame=hof, verbose=False)
-    best=FogIndividual(hof[0], problem)
-    convergence=get_convergence(log, best.obj_func())
+    best = FogIndividual(hof[0], problem)
+    convergence = get_convergence(log, best.obj_func())
     best.set_convergence_gen(convergence)
     #gen=log.select("gen")
     #mins=log.select("min")
@@ -110,22 +126,22 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     #plot_data(gen,mins,stds)
     return best
 
-def dump_solution(gaout, sol):
+def dump_solution(gaout, sol:Solution):
     with open(gaout, "w+") as f:
             json.dump(sol.dump_solution(), f, indent=2)
 
 def solve_problem(data):
     # FIXME: should remove this global dependency!
     global problem
-    cxbp = 0.5
-    mutpb = 0.3
-    problem=Problem(data)
-    toolbox=init_ga(problem)
-    ts=time.time()
-    sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    deltatime=time.time()-ts
+    cxbp = 0.5 # Probability of mating two individuals
+    mutpb = 0.3 # Probability of mutating two individuals
+    problem = Problem(data)
+    toolbox = init_ga(problem)
+    ts = time.time()
+    sol = solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    deltatime = time.time()-ts
     sol.registertime(deltatime)
-    resp=data['response']
+    resp = data['response']
     if resp.startswith('file://'):
         dump_solution(resp.lstrip('file://'), sol)
     else:
@@ -136,7 +152,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
     args = parser.parse_args()
-    fname=args.file if args.file is not None else 'sample_input2.json'
+    fname = args.file if args.file is not None else 'sample_input2.json'
     with open(fname,) as f:
         data = json.load(f)
     solve_problem(data)
