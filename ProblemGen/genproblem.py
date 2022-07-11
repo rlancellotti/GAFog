@@ -4,6 +4,8 @@ import numpy
 import json
 import sys
 
+SRVCV=1.0
+
 def get_net_id(i, j, n):
     if i>j:
         (i,j)=(j,i)
@@ -18,7 +20,10 @@ def get_fog(config):
     avgcap=float(config['avgcap']) if 'avgcap' in config.keys() else 1.0
     fog={}
     # generate capacities of fog nodes
-    cap=list(numpy.random.normal(loc=avgcap, scale=0.2*avgcap, size=n_fog))
+    # fog nodes capcities are normally distribute with mean=avgcap, CoV=0.2
+    # cap=list(numpy.random.normal(loc=avgcap, scale=0.2*avgcap, size=n_fog))
+    # all fog nodes are identical
+    cap=[1.0]*n_fog
     # remove negative values
     for idx, val in enumerate(cap):
         if val < mincap:
@@ -96,7 +101,8 @@ def get_microservice(config):
             sname='MS%d_%d'%(c+1,ns)
             # compute service time
             t_srv=ts[ns]-ts[ns-1]
-            microservice[sname]={"meanserv": t_srv, "stddevserv": 1.0*t_srv}
+            # Here is the CoV
+            microservice[sname]={"meanserv": t_srv, "stddevserv": SRVCV*t_srv}
     return microservice
 
 def get_problem(config):
@@ -138,7 +144,7 @@ if __name__ == "__main__":
     fname=args.file if args.output is not None else 'sample_problem.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
-        data = json.dump(prob, f, indent=2)
+        json.dump(prob, f, indent=2)
     if args.solve:
         sys.path.append('../ChainOptService')
         from ga import solve_problem

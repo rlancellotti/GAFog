@@ -4,9 +4,9 @@ import os.path
 import json
 import numpy as np
 # Hack to find modules of other services
-sys.path.append('../ChainOptService')
-from ga import solve_problem
-from genproblem import get_problem
+sys.path.append('../')
+from ProblemGen.genproblem import get_problem
+from ChainOptService.ga import solve_problem
 
 config={
     'nchain_fog': 0.4,
@@ -135,10 +135,10 @@ def run_experiment(par, values, nrun, config, mult, outfile):
                 res.append(r)
                 print('+', end='')
             else:
-                print('X', end='')
+                print('-', end='')
             sys.stdout.flush()
         # newline
-        print()
+        print('')
         #compute average over multiple runs
         cr=collect_results(res)
         cr= {par: val} | cr
@@ -152,7 +152,7 @@ config['nsrv_chain']=10
 run_experiment('nfog', nfogs, nrun, config, -1, 'sens_nfog.data')
 
 config={
-    'nchain_fog': 1/3,
+    'nchain_fog': 1.0/3,
     'nsrv_chain': 3,
     'nfog': 3,
     'tchain': 10.0,

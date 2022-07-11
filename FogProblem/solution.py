@@ -1,7 +1,9 @@
-from problem import Problem
-from math import sqrt
-import sys
 import json
+import sys
+from math import sqrt
+sys.path.append('../')
+from FogProblem.problem import Problem
+
 
 class Solution:
 
@@ -151,18 +153,21 @@ class Solution:
             tsrv=0.0
             # for each service
             for s in self.problem.get_microservice_list(sc=sc):
-                # get fog node id from service name
-                fidx=self.mapping[self.serviceidx[s]]
-                fname=self.fognames[fidx]
-                # add tresp for node where the service is located
-                tr+=self.fog[fidx]['twait']
-                tsrv+=self.problem.get_microservice(s)['meanserv']/self.fog[fidx]['capacity']
-                twait+=self.fog[fidx]['twait']
-                # add tnet for every node (except first)
-                if prevfog is not None:
-                    tr+=self.problem.get_delay(prevfog, fname)['delay']
-                    tnet+=self.problem.get_delay(prevfog, fname)['delay']
-                prevfog=fname
+                if self.mapping[self.serviceidx[s]] is not None:
+                    # get fog node id from service name
+                    fidx=self.mapping[self.serviceidx[s]]
+                    fname=self.fognames[fidx]
+                    # add tresp for node where the service is located
+                    tr+=self.fog[fidx]['twait']
+                    tsrv+=self.problem.get_microservice(s)['meanserv']/self.fog[fidx]['capacity']
+                    twait+=self.fog[fidx]['twait']
+                    # add tnet for every node (except first)
+                    if prevfog is not None:
+                        tr+=self.problem.get_delay(prevfog, fname)['delay']
+                        tnet+=self.problem.get_delay(prevfog, fname)['delay']
+                    prevfog=fname
+                else:
+                    prevfog=None
             rv[sc]={'resptime': twait+tsrv+tnet, 'resptime_old': tr, 'waittime': twait, 'servicetime': tsrv, 'networktime': tnet}
         return rv
 
@@ -191,13 +196,13 @@ class Solution:
         for s in self.problem.get_sensor_list():
             sc=self.problem.get_chain_for_sensor(s)
             rv['servicechain'][sc]['sensors'].append(s)
-        # print(self.mapping)
-        # print(self.obj_func())
         for msidx in range(self.nsrv):
-            rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
+            if self.mapping[msidx] is not None:
+                rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
-            rv['sensor'][s]=self.fognames[self.mapping[msidx]]
+            if self.mapping[msidx] is not None:
+                rv['sensor'][s]=self.fognames[self.mapping[msidx]]
         for f in self.fog:
             rv['fog'][f['name']]={
                 'rho': f['rho'], 
@@ -222,8 +227,9 @@ if __name__ == "__main__":
         prob_data = json.load(f)
     p=Problem(prob_data)
     print('problem object:', p)
-    #mappings=[([0, 1, 1], '011'), ([1, 1, 0], '110')]
-    mappings=[([0, 0, 1, 1], '0011'), ([0, 1, 0, 1], '0101'), ([0, 1, 1, 0], '0110')]
+    # alterante mapping [([0, 1, 1], '011'), ([1, 1, 0], '110')]
+    #mappings=[([0, 0, 1, 1], '0011'), ([0, 1, 0, 1], '0101'), ([0, 1, 1, 0], '0110')]
+    mappings=[([0, 0, 1, None], '001N')]
     for (mapping, mname) in mappings:
         fname=f'sample_output_{mname}.json'
         print(f'individual objct {mapping} -> {fname}')
