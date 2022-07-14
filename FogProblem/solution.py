@@ -176,6 +176,7 @@ class Solution:
         if self.resptimes is None:
             self.resptimes=self.compute_performance()
         for sc in self.resptimes:
+            # FIXME: if part of the service chain is not allocated, the obj function should reflect this in the weights!
             tr_tot+=self.resptimes[sc]['resptime']*self.problem.servicechain[sc]['weight']
         return tr_tot
     
@@ -219,7 +220,25 @@ class Solution:
             rv['network']=self.problem.network_as_matrix()
         # print(rv)
         return rv
-            
+
+    def fog_from_name(self, fname):
+        if self.resptimes is None:
+            self.obj_func()
+        for f in self.fog:
+            if f['name']==fname:
+                return f
+
+    def get_fog_param(self, fname, par):
+        f=self.fog_from_name(fname)
+        if f is not None and par in f.keys():
+            return f[par]
+    
+    def get_chain_param(self, scname, par):
+        if self.resptimes is None:
+            self.obj_func()
+        if scname in self.resptimes.keys() and par in self.resptimes[scname].keys():
+            return self.resptimes[scname][par]
+
 if __name__ == "__main__":
     fin='sample_input_sim.json' if len(sys.argv)==1 else sys.argv[1]
     print('reading from:', fin)
