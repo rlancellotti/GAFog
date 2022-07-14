@@ -28,3 +28,6 @@ ProblemGen/*.tgz
 ProblemGen/*.zip
 GA.code-workspace
 FogProblem/sample_output*.json
+
+Pipfile
+./vscode
