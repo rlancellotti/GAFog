@@ -31,3 +31,4 @@ FogProblem/sample_output*.json
 
 Pipfile
 ./vscode
+Mbfd/__pycache__/*
