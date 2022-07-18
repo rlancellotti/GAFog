@@ -49,7 +49,7 @@ class Solution_mbfd(Solution):
             self.fog[fidx]= {
                 'name': self.fognames[fidx],
                 'capacity': self.problem.get_fog(self.fognames[fidx])['capacity'],
-                'microservices': [],
+                'microservices': self.get_service_list(fidx),
                 'twait': 0.0,
                 }
 
@@ -105,7 +105,7 @@ class Solution_mbfd(Solution):
                 self.resptimes = super().compute_performance() # To compute resptime (Rc)
                 if ms not in [m for f in self.fog for m in f["microservices"]] \
                     and lam_tot<mu and self.resptimes[sc]['resptime']<(self.k*Sla) \
-                    and (X_func==None or X_func>self.obj_func()):
+                    and (X_func==None or X_func>self.obj_func()): # TODO: i really need this?
 
                     
 
