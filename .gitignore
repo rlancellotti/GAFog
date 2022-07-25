@@ -27,6 +27,5 @@ ProblemGen/*.gnuplot
 ProblemGen/*.tgz
 ProblemGen/*.zip
 GA.code-workspace
-
 Pipfile
 ./vscode
