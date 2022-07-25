@@ -9,7 +9,7 @@ import requests
 from collections import namedtuple
 sys.path.append('../')
 from FogProblem.problem import Problem
-from ChainOptService.fogindividual import FogIndividual
+from GA.fogindividual import FogIndividual
 
 from deap import base
 from deap import creator
@@ -127,7 +127,7 @@ def solve_problem(data):
     ts=time.time()
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
     deltatime=time.time()-ts
-    sol.registertime(deltatime)
+    sol.register_execution_time(deltatime)
     resp=data['response']
     if resp.startswith('file://'):
         dump_solution(resp.lstrip('file://'), sol)

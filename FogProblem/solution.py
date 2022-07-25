@@ -24,6 +24,9 @@ class Solution:
         self.deltatime=None
         self.extra_param={}
 
+    def register_execution_time(self, deltatime):
+        self.set_extra_param('deltatime', deltatime)
+
     def get_service_idx(self):
         rv={}
         i=0
