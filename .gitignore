@@ -29,3 +29,4 @@ ProblemGen/*.zip
 GA.code-workspace
 Pipfile
 ./vscode
+Mbfd/__pycache__/*
