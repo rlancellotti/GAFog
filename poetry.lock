@@ -96,14 +96,6 @@ unicode = ["unicodedata2 (>=14.0.0)"]
 woff = ["zopfli (>=0.1.4)", "brotlicffi (>=0.8.0)", "brotli (>=1.0.1)"]
 
 [[package]]
-name = "functions"
-version = "0.7.0"
-description = "Functional programming in Python"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "idna"
 version = "3.3"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -326,7 +318,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b5ad23135bab970ad85552fa2019ba37e453bc7401b348b6cfb167e169f3dda5"
+content-hash = "5b124072e5742e9c90e924662ed2971acd261f64876b66d3b2649fd67ac597d1"
 
 [metadata.files]
 certifi = [
@@ -399,9 +391,6 @@ flask = [
 fonttools = [
     {file = "fonttools-4.34.4-py3-none-any.whl", hash = "sha256:d73f25b283cd8033367451122aa868a23de0734757a01984e4b30b18b9050c72"},
     {file = "fonttools-4.34.4.zip", hash = "sha256:9a1c52488045cd6c6491fd07711a380f932466e317cb8e016fc4e99dc7eac2f0"},
-]
-functions = [
-    {file = "functions-0.7.0.tar.gz", hash = "sha256:5a36bd11d36bbce210fecddd9ff1a475a86035905818a4075d6c7ebb2f714181"},
 ]
 idna = [
     {file = "idna-3.3-py3-none-any.whl", hash = "sha256:84d9dd047ffa80596e0f246e2eab0b391788b0503584e8945f2368256d2735ff"},
