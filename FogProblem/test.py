@@ -2,9 +2,9 @@
 import unittest
 import sys
 import math
-sys.path.append('../')
-from FogProblem.problem import Problem
-from FogProblem.solution import Solution
+
+from ..FogProblem.problem import Problem
+from ..FogProblem.solution import Solution
 
 sample_problem={"fog": {"F1": {"capacity": 1.0}, "F2": {"capacity": 1.5}},
                 "sensor": {"S1": {"servicechain": "SC1", "lambda": 0.4},

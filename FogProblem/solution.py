@@ -1,8 +1,8 @@
 import json
 import sys
 from math import sqrt
-sys.path.append('../')
-from FogProblem.problem import Problem
+
+from ..FogProblem.problem import Problem
 
 
 class Solution:

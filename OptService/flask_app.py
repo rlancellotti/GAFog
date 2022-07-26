@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 import json
 import sys
-sys.path.append('../')
-from GA.ga import solve_problem
+
+from ..GA.ga import solve_problem
 
 app = Flask(__name__)
 # Flask API

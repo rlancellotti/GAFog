@@ -28,6 +28,6 @@ ProblemGen/*.tgz
 ProblemGen/*.zip
 GA.code-workspace
 
-Pipfile
-./vscode
+Pipfile*
 Mbfd/__pycache__/*
+.vscode

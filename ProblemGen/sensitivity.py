@@ -3,10 +3,9 @@ import sys
 import os.path
 import json
 import numpy as np
-# Hack to find modules of other services
-sys.path.append('../')
-from ProblemGen.genproblem import get_problem
-from ChainOptService.ga import solve_problem
+
+from .genproblem import get_problem
+from ..GA.ga import solve_problem
 
 config={
     'nchain_fog': 0.4,

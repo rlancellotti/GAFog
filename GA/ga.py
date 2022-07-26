@@ -7,9 +7,9 @@ import json
 import argparse
 import requests
 from collections import namedtuple
-sys.path.append('../')
-from FogProblem.problem import Problem
-from ChainOptService.fogindividual import FogIndividual
+
+from ..FogProblem.problem import Problem
+from .fogindividual import FogIndividual
 
 from deap import base
 from deap import creator
