@@ -2,7 +2,7 @@ import json
 import sys
 from math import sqrt
 
-from ..FogProblem.problem import Problem
+from ..fog_problem.problem import Problem
 
 
 class Solution:

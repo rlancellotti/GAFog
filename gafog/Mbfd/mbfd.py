@@ -4,8 +4,8 @@ import argparse
 import time
 from datetime import timedelta
 
-from ..FogProblem.problem import Problem
-from ..FogProblem.solution import Solution
+from ..fog_problem.problem import Problem
+from ..fog_problem.solution import Solution
 from .solution_mbfd import SolutionMbfd
 
 

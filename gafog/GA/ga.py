@@ -8,7 +8,7 @@ import argparse
 import requests
 from collections import namedtuple
 
-from ..FogProblem.problem import Problem
+from ..fog_problem.problem import Problem
 from .fogindividual import FogIndividual
 
 from deap import base

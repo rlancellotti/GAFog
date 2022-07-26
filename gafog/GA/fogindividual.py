@@ -2,8 +2,8 @@ from math import sqrt
 import json
 import sys
 
-from ..FogProblem.problem import Problem
-from ..FogProblem.solution import Solution
+from ..fog_problem.problem import Problem
+from ..fog_problem.solution import Solution
 
 class FogIndividual(Solution):
 
