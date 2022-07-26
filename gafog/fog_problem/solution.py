@@ -250,7 +250,7 @@ if __name__ == "__main__":
     #mappings=[([0, 0, 1, 1], '0011'), ([0, 1, 0, 1], '0101'), ([0, 1, 1, 0], '0110')]
     mappings=[([0, 0, 1, None], '001N')]
     for (mapping, mname) in mappings:
-        fname=f'sample_output_{mname}.json'
+        fname=f'sample/sample_output_{mname}.json'
         print(f'individual objct {mapping} -> {fname}')
         sol=Solution(mapping, p)
         with open(fname, 'w') as f:

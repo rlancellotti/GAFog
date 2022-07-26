@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import json
 import sys
 
-from ..GA.ga import solve_problem
+from ..ga.ga import solve_problem
 
 app = Flask(__name__)
 # Flask API

@@ -3,7 +3,7 @@ import random
 import numpy
 import math
 import datetime
-from problem import Problem
+from .problem import Problem
 from fogindividual import FogIndividual
 import matplotlib.pyplot as plt
 from collections import namedtuple

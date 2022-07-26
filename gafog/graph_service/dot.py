@@ -22,12 +22,12 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--output', help='output file. Default graph.svg')
     parser.add_argument('-f', '--file', help='input file. Default use sample_output.json')
     args = parser.parse_args()
-    fdata = args.file if args.file is not None else 'sample_output.json'
-    ftemplate = 'graph.dot.mako'
+    fdata = args.file or 'gafog/graph_service/sample_output.json'
+    ftemplate = 'gafog/graph_service/graph.dot.mako'
     with open(fdata, 'r') as f:
         data = json.load(f)
     out = process_template(ftemplate, data)
-    fout = args.output if args.output is not None else 'graph.svg'
+    fout = args.output or 'graph.svg'
     if fout.endswith('.dot'):
         with open(fout, 'w') as f:
             f.write(out)

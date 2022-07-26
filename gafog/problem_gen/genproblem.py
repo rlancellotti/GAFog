@@ -123,11 +123,12 @@ def get_problem(config):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--file', help='output file. Default sample_problem.json')
     parser.add_argument('-o', '--output', help='output file. Default sample_problem.json')
     parser.add_argument('-c', '--config', help='config file. Default use default config')
     parser.add_argument('-s', '--solve',  action='store_true', help='solve problem')
     args = parser.parse_args()
-    oname=args.output if args.output is not None else 'sample_problem.json'
+    oname=args.output or 'sample/sample_problem.json'
     if args.config is not None:
         with open(args.config, 'r') as f:
             config=json.load(f)
@@ -141,13 +142,12 @@ if __name__ == "__main__":
             'enable_network': True,
             'response': 'file://sample_output.json'
         }
-    fname=args.file if args.output is not None else 'sample_problem.json'
+    fname=args.file or 'sample/sample_problem.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
         json.dump(prob, f, indent=2)
     if args.solve:
-        sys.path.append('../ChainOptService')
-        from ga import solve_problem
+        from ..ga.ga import solve_problem
         solve_problem(prob)
 
 

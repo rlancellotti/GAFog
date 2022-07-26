@@ -5,7 +5,7 @@ import json
 import numpy as np
 
 from .genproblem import get_problem
-from ..GA.ga import solve_problem
+from ..ga.ga import solve_problem
 
 config={
     'nchain_fog': 0.4,

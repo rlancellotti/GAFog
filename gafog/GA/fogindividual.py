@@ -22,7 +22,7 @@ class FogIndividual(Solution):
         self.set_extra_param('deltatime', deltatime)
         
 if __name__ == "__main__":
-    with open('sample_input.json',) as f:
+    with open('sample/sample_input.json',) as f:
         data = json.load(f)
     print('problem objct')
     p=Problem(data)

@@ -131,7 +131,7 @@ class Problem:
         return rv
 
 if __name__ == '__main__':
-    with open('sample_input.json',) as f:
+    with open('sample/sample_input.json',) as f:
         data = json.load(f)
     p=Problem(data)
     print(p)

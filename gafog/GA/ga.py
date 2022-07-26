@@ -2,7 +2,6 @@
 import random
 import numpy
 import time
-import sys
 import json
 import argparse
 import requests
@@ -139,7 +138,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
     args = parser.parse_args()
-    fname=args.file if args.file is not None else 'sample_input2.json'
+    fname=args.file or 'sample/sample_input2.json'
     with open(fname,) as f:
         data = json.load(f)
     solve_problem(data)
