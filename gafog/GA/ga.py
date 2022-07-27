@@ -4,7 +4,6 @@ import numpy
 import time
 import json
 import argparse
-import requests
 from collections import namedtuple
 
 from ..fog_problem.problem import Problem

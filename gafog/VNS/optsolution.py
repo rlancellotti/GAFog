@@ -115,7 +115,7 @@ class OptSolution:
                 tr+=self.fog[fidx]['tresp']
                 # add tnet for every node (except first)
                 # print('computing network delay for service', s)
-                if prevfog is not None:
+                if prevfog:
                     # print('network delay contribution', prevfog, fname)
                     tr+=self.problem.get_delay(prevfog, fname)['delay']
                 prevfog=fname

@@ -129,7 +129,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--solve',  action='store_true', help='solve problem')
     args = parser.parse_args()
     oname=args.output or 'sample/sample_problem.json'
-    if args.config is not None:
+    if args.config:
         with open(args.config, 'r') as f:
             config=json.load(f)
     else:

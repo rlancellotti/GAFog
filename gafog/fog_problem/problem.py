@@ -99,7 +99,7 @@ class Problem:
             self.servicechain[sc]['weight'] /= tot_weight
 
     def get_microservice_list(self, sc=None):
-        if sc is None:
+        if not sc:
             return list(self.microservice.keys())
         else:
             return self.servicechain[sc]['services']

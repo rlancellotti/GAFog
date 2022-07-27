@@ -130,7 +130,7 @@ def run_experiment(par, values, nrun, config, mult, outfile):
             sys.stdout.flush()
             #parse results
             r=parse_result(fname)
-            if r is not None:
+            if r:
                 res.append(r)
                 print('+', end='')
             else:

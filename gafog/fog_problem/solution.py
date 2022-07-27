@@ -155,7 +155,7 @@ class Solution:
             tsrv=0.0
             # for each service
             for s in self.problem.get_microservice_list(sc=sc):
-                if self.mapping[self.serviceidx[s]] is not None:
+                if self.mapping[self.serviceidx[s]]:
                     # get fog node id from service name
                     fidx=self.mapping[self.serviceidx[s]]
                     fname=self.fognames[fidx]
@@ -175,7 +175,7 @@ class Solution:
 
     def obj_func(self):
         tr_tot=0.0
-        if self.resptimes is None:
+        if not self.resptimes:
             self.resptimes=self.compute_performance()
         for sc in self.resptimes:
             # FIXME: if part of the service chain is not allocated, the obj function should reflect this in the weights!
@@ -184,7 +184,7 @@ class Solution:
     
     def dump_solution(self):
         # print('dumping solution')
-        if self.resptimes is None:
+        if not self.resptimes:
             self.obj_func()
         rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}}
         # add services in each service chain
@@ -200,11 +200,11 @@ class Solution:
             sc=self.problem.get_chain_for_sensor(s)
             rv['servicechain'][sc]['sensors'].append(s)
         for msidx in range(self.nsrv):
-            if self.mapping[msidx] is not None:
+            if self.mapping[msidx]:
                 rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
-            if self.mapping[msidx] is not None:
+            if self.mapping[msidx]:
                 rv['sensor'][s]=self.fognames[self.mapping[msidx]]
         for f in self.fog:
             rv['fog'][f['name']]={
@@ -224,7 +224,7 @@ class Solution:
         return rv
 
     def fog_from_name(self, fname):
-        if self.resptimes is None:
+        if not self.resptimes:
             self.obj_func()
         for f in self.fog:
             if f['name']==fname:
@@ -232,11 +232,11 @@ class Solution:
 
     def get_fog_param(self, fname, par):
         f=self.fog_from_name(fname)
-        if f is not None and par in f.keys():
+        if f and par in f.keys():
             return f[par]
     
     def get_chain_param(self, scname, par):
-        if self.resptimes is None:
+        if not self.resptimes:
             self.obj_func()
         if scname in self.resptimes.keys() and par in self.resptimes[scname].keys():
             return self.resptimes[scname][par]
