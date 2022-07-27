@@ -12,10 +12,12 @@ data.*
 fog*.ned
 MM1-MG1-Omnet/osmarender/*
 fogconfig.json
-FogProblem/sample_output*.json
-OptService/sample_output*.json
 output_*.json
-ProblemGen/sample_problem.json
+*/sample_problem.json
+*/sample_output.json
+*/sample_output*.json
+*/sample_input*.json
+
 GA.code-workspace
 Pipfile
 ./vscode
