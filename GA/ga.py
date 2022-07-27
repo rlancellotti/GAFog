@@ -122,19 +122,12 @@ def solve_problem(prob):
     cxbp = 0.5
     mutpb = 0.3
     problem=prob
+    problem.begin_solution()
     toolbox=init_ga(problem)
-    ts=time.perf_counter_ns()
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    deltatime=(time.perf_counter_ns()-ts)/1e+9
-    sol.register_execution_time(deltatime)
+    problem.end_solution()
+    sol.register_execution_time()
     return sol
-    #FIXME: must simply return data object
-    #resp=data['response']
-    #if resp.startswith('file://'):
-    #    dump_solution(resp.lstrip('file://'), sol)
-    #else:
-    #    # use requests package to send results
-    #    requests.post(data['response'], json=sol.dump_solution())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

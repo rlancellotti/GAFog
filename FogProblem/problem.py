@@ -1,4 +1,5 @@
 import json
+import time
 
 class Problem:
     def __init__(self, problem):
@@ -133,6 +134,21 @@ class Problem:
     
     def get_response_url(self):
         return self.response
+    
+    def begin_solution(self):
+        self.start_time=time.perf_counter_ns()
+
+    def end_solution(self):
+        self.end_time=time.perf_counter_ns()
+        self.solution_time=(self.end_time-self.start_time)/1e+9
+        return self.solution_time
+
+    def get_solution_time(self):
+        try:
+            return self.solution_time
+        except AttributeError:
+            return -1.0
+
 
 if __name__ == '__main__':
     with open('sample_input.json',) as f:

@@ -24,8 +24,11 @@ class Solution:
         self.deltatime=None
         self.extra_param={}
 
-    def register_execution_time(self, deltatime):
-        self.set_extra_param('deltatime', deltatime)
+    def register_execution_time(self, deltatime=None):
+        if deltatime:
+            self.set_extra_param('deltatime', deltatime)
+        else:
+            self.set_extra_param('deltatime', self.problem.get_solution_time())
 
     def get_service_idx(self):
         rv={}
