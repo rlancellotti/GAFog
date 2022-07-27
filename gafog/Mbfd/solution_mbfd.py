@@ -84,8 +84,9 @@ class SolutionMbfd(Solution):
                    and self.resptimes[self.get_ms_from_chain(ms)]['resptime']<(self.k*Sm): 
                     
                     self.mapping[self.get_service_idx()[ms]] = fidx # Maps that the microservice ms entered in the solution
-                    break 
+                    
                     # The opt solution is choosen and it doesnt need to search for better allocation
+                    break 
 
                 else:
                     # This was not the best solution so we have to repeat this search with the remaining nodes
@@ -103,8 +104,8 @@ if __name__ == "__main__":
         data = json.load(f)
     
     problem  = Problem(data)
-    sol      = SolutionMbfd(problem, [None, None, None]) 
-
+    sol      = SolutionMbfd(problem, [None, None, None])
+    
     fname = 'sample/' + (args.output or 'output.json')
     with open(fname, "w") as f:
         json.dump(sol.dump_solution(), f, indent=2)

@@ -10,9 +10,10 @@ def solve_problem(data:dict):
     return  SolutionMbfd(problem) 
     
 def compare(solMBFD:SolutionMbfd):
-    solGA   =  Solution(solMBFD.mapping,solMBFD.problem)
-    solGA.compute_fog_status()
-    if solGA.obj_func() == solMBFD.obj_func():
+    sol   =  Solution(solMBFD.mapping,solMBFD.problem)
+    sol.compute_fog_status()
+
+    if sol.obj_func() == solMBFD.obj_func():
         return True
     
     return False

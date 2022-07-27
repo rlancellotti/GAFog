@@ -7,7 +7,7 @@ from enum import Enum
 
 from ..fog_problem.problem import Problem
 from ..fog_problem.solution import Solution
-import ga.ga as gamod
+from ..ga import ga as gamod
 
 class Algorithms(Enum):
     GA='GA'
@@ -55,8 +55,7 @@ if __name__ == "__main__":
     algoname=args.algo or 'GA'
     algo=algorithm_by_name(algoname)
     if not(algo):
-        print(f'algorithm {algoname} is not valid')
-        sys.exit()
+        raise NameError(f'algorithm {algoname} is not valid')
     with open(fname,) as f:
         data = json.load(f)
     sol=solve_problem(Problem(data), algo)
