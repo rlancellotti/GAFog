@@ -3,7 +3,7 @@ import argparse
 import time
 from datetime import timedelta
 
-from .mbfd import solve_problem, compare
+from .mbfd import solve_problem
 
 
 st = time.monotonic()  # Start time, when it begins the program
@@ -26,5 +26,3 @@ with open(fname, "w") as f:
 
 et = time.monotonic()  # end time, when its finished the execution of the program
 print(f"execution time: {timedelta(et - st)}")  
-
-print(compare(sol))

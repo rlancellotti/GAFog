@@ -19,10 +19,10 @@ class SolutionMbfd(Solution):
 
         super().__init__(individual, problem)
 
-        self.fog_initialize()                        # Init for self.fog params
-        self.fognames    = self.sort_fog(problem)    # A name's list of the fog sorted in decreasing order by capacity
-        self.service     = self.sort_ms(problem)     # List of microservices sorted by capacity(Sm or meanserv)
-        self.compute_solution()                      # Elaborates the optimal solution 
+        self.fog_initialize()                         # Init for self.fog params
+        self.fognames    = self.sort_fog(problem)     # A name's list of the fog sorted in decreasing order by capacity
+        self.service     = self.sort_ms(problem)      # List of microservices sorted by capacity(Sm or meanserv)
+        self.compute_solution()                       # Elaborates the optimal solution 
         
 
     def sort_fog(self, problem:Problem):
@@ -64,12 +64,12 @@ class SolutionMbfd(Solution):
 
     def compute_solution(self):
         """ Computes the solution of the problem, based on the euristic algorithm of the modified best fit decreasing. """
-
+        
         Sm = 0.0 # Avg. service time for the microservice (Sm or Tc), used for the calculation of the SLA 
 
         # For all the microservices (already sorted)
         for ms in self.service :
-            
+
             # If the microservice is already in the solution/on a fog node, it skips to the next iteration
             if not self.mapping[self.get_service_idx()[ms]] is None:  
                 continue
@@ -79,23 +79,31 @@ class SolutionMbfd(Solution):
             # For all the fog nodes, sorted too
             for fidx in range(self.nf):
 
-                self.mapping[self.get_service_idx()[ms]] = fidx 
+                self.mapping[self.serviceidx[ms]] = fidx 
                 self.compute_fog_status() # Compute the params for this solution (= if the node is taken on fidx)
 
-                self.resptimes = self.compute_performance() # To compute resptime (Rc)
+                self.resptimes   = self.compute_performance() # To compute resptime (Rc)
 
                 # Decision for the optimal solution, decides if a microservice is allocated on the node
                 if self.fog[fidx]['lambda']<self.fog[fidx]['mu'] \
                    and self.resptimes[self.get_ms_from_chain(ms)]['resptime']<(self.k*Sm): 
                     
-                    self.mapping[self.get_service_idx()[ms]] = fidx # Maps that the microservice ms entered in the solution
-                    
+                    self.mapping[self.serviceidx[ms]] = fidx # Maps that the microservice ms entered in the solution
+                    break
                     # The opt solution is choosen and it doesnt need to search for better allocation
-                    break 
-
+                
                 else:
                     # This was not the best solution so we have to repeat this search with the remaining nodes
-                    self.mapping[self.get_service_idx()[ms]] = None
+                    self.mapping[self.serviceidx[ms]] = None       
+
+
+    def compare(self):
+        """ Not finished yet, It should compare the obj_func of two different solution. """
+        # TODO: it should be done with ga algorithm?
+
+        sol = Solution(self.mapping, self.problem)
+        print(f'Solution\'s obj func: {sol.obj_func()}')
+        print(f'SolutionMbfd\'s obj func: {self.obj_func()}')
 
 
 if __name__ == "__main__":

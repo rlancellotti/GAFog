@@ -155,7 +155,7 @@ class Solution:
             tsrv=0.0
             # for each service
             for s in self.problem.get_microservice_list(sc=sc):
-                if self.mapping[self.serviceidx[s]]:
+                if self.mapping[self.serviceidx[s]] is not None:
                     # get fog node id from service name
                     fidx=self.mapping[self.serviceidx[s]]
                     fname=self.fognames[fidx]
@@ -184,8 +184,9 @@ class Solution:
     
     def dump_solution(self):
         # print('dumping solution')
-        if not self.resptimes:
-            self.obj_func()
+
+        self.set_extra_param('obj_func', self.obj_func())
+
         rv={'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}}
         # add services in each service chain
         for sc in self.problem.get_servicechain_list():
@@ -256,7 +257,7 @@ if __name__ == "__main__":
     mappings=[([1, 1, 1], '111')]
     for (mapping, mname) in mappings:
         fname=f'sample/sample_output_{mname}.json'
-        print(f'individual objct {mapping} -> {fname}')
+        print(f'individual object {mapping} -> {fname}')
         sol=Solution(mapping, p)
         with open(fname, 'w') as f:
             json.dump(sol.dump_solution(), f, indent=2)
