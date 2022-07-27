@@ -3,6 +3,11 @@ import argparse
 import numpy
 import json
 import sys
+sys.path.append('../')
+from FogProblem.problem import Problem
+from FogProblem.solution import Solution
+from OptService.optimize import solve_problem, send_response, Algorithms
+
 
 SRVCV=1.0
 
@@ -107,18 +112,19 @@ def get_microservice(config):
 
 def get_problem(config):
     if bool(config['enable_network']):
-        return {'response': config['response'],
-                'fog': get_fog(config), 
-                'sensor': get_sensor(config), 
-                'servicechain': get_chain(config), 
-                'microservice': get_microservice(config), 
-                'network': get_network(config)}
+        rv = {'response': config['response'],
+              'fog': get_fog(config), 
+              'sensor': get_sensor(config), 
+              'servicechain': get_chain(config), 
+              'microservice': get_microservice(config), 
+              'network': get_network(config)}
     else:
-        return {'response': config['response'],
-                'fog': get_fog(config), 
-                'sensor': get_sensor(config), 
-                'servicechain': get_chain(config), 
-                'microservice': get_microservice(config)}
+        rv = {'response': config['response'],
+              'fog': get_fog(config), 
+              'sensor': get_sensor(config), 
+              'servicechain': get_chain(config), 
+              'microservice': get_microservice(config)}
+    return Problem(rv)
 
 
 if __name__ == "__main__":
@@ -144,11 +150,10 @@ if __name__ == "__main__":
     fname=args.file if args.output is not None else 'sample_problem.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
-        json.dump(prob, f, indent=2)
+        json.dump(prob.dump_problem(), f, indent=2)
     if args.solve:
-        sys.path.append('../ChainOptService')
-        from ga import solve_problem
-        solve_problem(prob)
+        sol=solve_problem(prob, Algorithms.GA)
+        send_response(sol)
 
 
 
