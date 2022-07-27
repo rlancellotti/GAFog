@@ -5,7 +5,6 @@ import time
 import sys
 import json
 import argparse
-import requests
 from collections import namedtuple
 sys.path.append('../')
 from FogProblem.problem import Problem
@@ -117,23 +116,25 @@ def dump_solution(gaout, sol):
     with open(gaout, "w+") as f:
             json.dump(sol.dump_solution(), f, indent=2)
 
-def solve_problem(data):
+def solve_problem(prob):
     # FIXME: should remove this global dependency!
     global problem
     cxbp = 0.5
     mutpb = 0.3
-    problem=Problem(data)
+    problem=prob
     toolbox=init_ga(problem)
-    ts=time.time()
+    ts=time.perf_counter_ns()
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    deltatime=time.time()-ts
+    deltatime=(time.perf_counter_ns()-ts)/1e+9
     sol.register_execution_time(deltatime)
-    resp=data['response']
-    if resp.startswith('file://'):
-        dump_solution(resp.lstrip('file://'), sol)
-    else:
-        # use requests package to send results
-        requests.post(data['response'], json=sol.dump_solution())
+    return sol
+    #FIXME: must simply return data object
+    #resp=data['response']
+    #if resp.startswith('file://'):
+    #    dump_solution(resp.lstrip('file://'), sol)
+    #else:
+    #    # use requests package to send results
+    #    requests.post(data['response'], json=sol.dump_solution())
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -142,6 +143,7 @@ if __name__ == "__main__":
     fname=args.file if args.file is not None else 'sample_input2.json'
     with open(fname,) as f:
         data = json.load(f)
-    solve_problem(data)
+    sol=solve_problem(Problem(data))
+    print(sol)
 
 

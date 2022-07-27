@@ -242,6 +242,9 @@ class Solution:
         if scname in self.resptimes.keys() and par in self.resptimes[scname].keys():
             return self.resptimes[scname][par]
 
+    def get_problem(self):
+        return self.problem
+
 if __name__ == "__main__":
     fin='sample_input_sim.json' if len(sys.argv)==1 else sys.argv[1]
     print('reading from:', fin)

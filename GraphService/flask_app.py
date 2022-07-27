@@ -1,5 +1,4 @@
 from flask import Flask, request, Response
-import json
 from dot import process_template, render_image
 
 app = Flask(__name__)

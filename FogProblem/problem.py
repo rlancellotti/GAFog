@@ -2,6 +2,7 @@ import json
 
 class Problem:
     def __init__(self, problem):
+        self.response=problem['response'] if 'response' in problem.keys() else None
         self.fog=problem['fog']
         self.sensor=problem['sensor']
         self.servicechain=problem['servicechain']
@@ -129,6 +130,9 @@ class Problem:
                 l.append(self.get_delay(f1, f2)['delay'])
             rv.append(l)
         return rv
+    
+    def get_response_url(self):
+        return self.response
 
 if __name__ == '__main__':
     with open('sample_input.json',) as f:
