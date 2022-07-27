@@ -1,6 +1,8 @@
 import json
 import time
 
+from sklearn.decomposition import non_negative_factorization
+
 class Problem:
     def __init__(self, problem):
         self.response=problem['response'] if 'response' in problem.keys() else None
@@ -17,6 +19,19 @@ class Problem:
         self.maxrho=0.999
         self.compute_service_params()
         self.compute_chain_params()
+
+    def dump_problem(self):
+        rv={
+            'fog': self.fog,
+            'sensor': self.sensor,
+            'servicechain': self.servicechain,
+            'microservice': self.microservice
+            }
+        if not self.network_is_fake:
+            rv['network']=self.network
+        if self.response is not None:
+            rv['response']=self.response
+        return rv
     
     def fake_network(self, fognodes):
         rv={}
