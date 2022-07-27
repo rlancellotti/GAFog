@@ -29,6 +29,9 @@ class Solution:
         self.deltatime=None
         self.extra_param={}
 
+    def register_execution_time(self, deltatime):
+        self.set_extra_param('deltatime', deltatime)
+
     def get_service_idx(self):
         rv={}
         i=0
@@ -244,6 +247,9 @@ class Solution:
             self.obj_func()
         if scname in self.resptimes.keys() and par in self.resptimes[scname].keys():
             return self.resptimes[scname][par]
+
+    def get_problem(self):
+        return self.problem
 
 if __name__ == "__main__":
     fin='sample/sample_input2.json' if len(sys.argv)==1 else sys.argv[1]
