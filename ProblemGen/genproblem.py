@@ -6,7 +6,7 @@ import sys
 sys.path.append('../')
 from FogProblem.problem import Problem
 from FogProblem.solution import Solution
-from OptService.optimize import solve_problem, send_response, Algorithms
+from OptService.optimize import solve_problem, send_response, Algorithms, algorithm_by_name
 
 
 SRVCV=1.0
@@ -132,6 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help='output file. Default sample_problem.json')
     parser.add_argument('-c', '--config', help='config file. Default use default config')
     parser.add_argument('-s', '--solve',  action='store_true', help='solve problem')
+    parser.add_argument('-a', '--algo',  help='solution algorithm. Default GA')
     args = parser.parse_args()
     oname=args.output if args.output is not None else 'sample_problem.json'
     if args.config is not None:
@@ -147,13 +148,15 @@ if __name__ == "__main__":
             'enable_network': True,
             'response': 'file://sample_output.json'
         }
+    algoname=args.algo if args.algo is not None else 'GA'
     fname=args.file if args.output is not None else 'sample_problem.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
         json.dump(prob.dump_problem(), f, indent=2)
     if args.solve:
-        sol=solve_problem(prob, Algorithms.GA)
-        send_response(sol)
+        sol=solve_problem(prob, algorithm_by_name(algoname))
+        if sol:
+            send_response(sol)
 
 
 

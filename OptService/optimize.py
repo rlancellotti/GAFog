@@ -30,6 +30,9 @@ def write_solution(fout, sol):
 
 
 def solve_problem(problem: Problem, algo):
+    if algo is None:
+        return None
+    #print(algo)
     match algo:
         case Algorithms.GA:
             return gamod.solve_problem(problem)
