@@ -7,15 +7,20 @@ from ..fog_problem.problem import Problem
 
 class Solution:
 
-    def __init__(self, individual, problem):
+    def __init__(self, individual:list, problem:Problem):
         self.problem=problem
         self.nf=problem.get_nfog()
         self.fognames=problem.get_fog_list()
         self.nsrv=problem.get_nservice()
         self.service=problem.get_microservice_list()
         self.serviceidx=self.get_service_idx()
+
+        # If individual is not specified or is an empty list
+        if not(individual):
+            individual = [None] * self.nsrv
+
         self.mapping = individual
-        self.fog=[None] * self.nf
+        self.fog=[{}] * self.nf
         self.compute_fog_status()
         self.resptimes=None
         self.queueingtimes=None
@@ -73,10 +78,11 @@ class Solution:
                 # compute stddev: std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
                 std+=ms['lambda']*(ms['stddevserv']**2 + ms['meanserv']**2)
                 lam_tot+=ms['lambda']
-            if lam_tot!=0:
+                
+            if lam_tot:
                 tserv=tserv/lam_tot
-                std=sqrt((std/lam_tot)-(tserv**2))
                 tserv=tserv/f['capacity']
+                std=sqrt((std/lam_tot)-(tserv**2))
                 std=std/f['capacity']
                 # compute mu and Cov for node
                 cv=std/tserv
@@ -240,7 +246,7 @@ class Solution:
             return self.resptimes[scname][par]
 
 if __name__ == "__main__":
-    fin='sample_input_sim.json' if len(sys.argv)==1 else sys.argv[1]
+    fin='sample/sample_input2.json' if len(sys.argv)==1 else sys.argv[1]
     print('reading from:', fin)
     with open(fin,) as f:
         prob_data = json.load(f)
@@ -248,10 +254,10 @@ if __name__ == "__main__":
     print('problem object:', p)
     # alterante mapping [([0, 1, 1], '011'), ([1, 1, 0], '110')]
     #mappings=[([0, 0, 1, 1], '0011'), ([0, 1, 0, 1], '0101'), ([0, 1, 1, 0], '0110')]
-    mappings=[([0, 0, 1, None], '001N')]
+    mappings=[([1, 1, 1], '111N')]
     for (mapping, mname) in mappings:
         fname=f'sample/sample_output_{mname}.json'
-        print(f'individual objct {mapping} -> {fname}')
+        print(f'individual object {mapping} -> {fname}')
         sol=Solution(mapping, p)
         with open(fname, 'w') as f:
             json.dump(sol.dump_solution(), f, indent=2)

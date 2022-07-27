@@ -1,8 +1,6 @@
 import string
-import sys
 import json
 import argparse
-from math import sqrt
 
 from ..fog_problem.problem import Problem
 from ..fog_problem.solution import Solution
@@ -12,28 +10,15 @@ class SolutionMbfd(Solution):
 
     k = 10 # Number multiplied by the sum of meanserv(Sm or Tc); SLA
  
-    def __init__(self, problem:Problem, individual:list=[]):
-        
-        self.problem     = problem                   # The problem
-        self.nf          = problem.get_nfog()        # Number of fog nodes
+    def __init__(self, problem:Problem, individual:list=[]):   
+
+        super().__init__(individual, problem)
+
+        self.fog_initialize()                        # Init for self.fog params
         self.fognames    = self.sort_fog(problem)    # A name's list of the fog sorted in decreasing order by capacity
-        self.nsrv        = problem.get_nservice()    # Number of services
         self.service     = self.sort_ms(problem)     # List of microservices sorted by capacity(Sm or meanserv)
-        self.serviceidx  = self.get_service_idx()    # Dict of indexed services
-
-        # If individual is not specified or is an empty list
-        if not(individual):
-            self.mapping = [None] * self.nsrv   # Is represented by all None
-        else:
-            self.mapping = individual           # Is represented by the already taken and the not taken
-
-        self.fog         = [{}] * self.nf    # Dict of information about the single fog nodes
-        self.resptimes   = None              # Information about the resptimes of the service chains
-        self.extra_param = {}                
-
-        self.fog_initialize()                   # Init for self.fog
-        self.compute_solution()                 # Elaborates the optimal solution        
-
+        self.compute_solution()                      # Elaborates the optimal solution 
+        
 
     def sort_fog(self, problem:Problem):
         """ It sorts fog nodes by capacity and initialize the status params. """
@@ -49,18 +34,11 @@ class SolutionMbfd(Solution):
         """
 
         for fidx in range(self.nf):
-            self.fog[fidx] =  {
+            self.fog[fidx].update({
                 'name': self.fognames[fidx],
                 'capacity': self.problem.get_fog(self.fognames[fidx])['capacity'],
                 'microservices': self.get_service_list(fidx), 
-                'twait':  0.0,
-                'tserv':  0.0, 
-                'stddev': 0.0, 
-                'mu':     0.0, 
-                'cv':     0.0,
-                'lambda': 0.0,
-                'tresp':  0.0,
-                'rho':    0.0, }
+                 })
 
 
     def sort_ms(self, problem:Problem):
@@ -80,78 +58,53 @@ class SolutionMbfd(Solution):
 
 
     def compute_solution(self):
-        """ Calculates the solution with a list of microservices names on a certain node. """
+        """ Computes the solution of the problem, based on the euristic algorithm of the modified best fit decreasing. """
 
-        tserv   = 0.0  # Avg. service time for the fog node (Sf)
-        std     = 0.0  # Standard deviation of tserv 
-        lam_tot = 0.0  # Incoming request rate to fog node
-        Sm      = 0.0  # Avg. service time for the microservice (Sm or Tc), used for the calculation of the SLA 
-        twait   = 0.0  # Avg. response time for the fog node (Rf)
-        X_func  = None # Obj_func's value for the first iteration  
+        Sm = 0.0 # Avg. service time for the microservice (Sm or Tc), used for the calculation of the SLA 
 
         # For all the microservices (already sorted)
         for ms in self.service :
             
-            # If the microservice is already in the solution/on a fog node skips to the next iteration
+            # If the microservice is already in the solution/on a fog node, it skips to the next iteration
             if not self.mapping[self.get_service_idx()[ms]] is None:  
                 continue
 
-            tserv   += self.problem.microservice[ms]['lambda']*self.problem.microservice[ms]['meanserv'] 
-            std     += self.problem.microservice[ms]['lambda']*(self.problem.microservice[ms]['stddevserv']**2 + self.problem.microservice[ms]['meanserv']**2)
-            lam_tot += self.problem.microservice[ms]['lambda']
-            Sm      += self.problem.microservice[ms]['meanserv'] 
-
+            Sm += self.problem.microservice[ms]['meanserv'] 
+            
             # For all the fog nodes, sorted too
             for fidx in range(self.nf):
-                f = self.problem.get_fog(self.fognames[fidx]) # Information of the fog node
 
-                if lam_tot!=0:
-
-                    tserv /= lam_tot
-                    tserv /= f['capacity']
-                    std    = sqrt((std/lam_tot)-(tserv**2)) 
-                    std   /= f['capacity']
-
-                    mu     = 1.0/tserv
-                    cv     = std/tserv
-                    rho    = lam_tot/mu
-                    twait  = self.mg1_waittime(lam_tot, mu, cv)
-
-                else:
-                    tserv = std = mu = cv = rho = twait = 0
+                self.mapping[self.get_service_idx()[ms]] = fidx 
+                self.compute_fog_status() # Compute the params for this solution (= if the node is taken on fidx)
 
                 self.resptimes = self.compute_performance() # To compute resptime (Rc)
-                X_current      = self.obj_func() # current value of obj_func
 
                 # Decision for the optimal solution, decides if a microservice is allocated on the node
-                if ms not in self.fog[0]['microservices'] and lam_tot<mu \
+                if self.fog[fidx]['lambda']<self.fog[fidx]['mu'] \
                    and self.resptimes[self.get_ms_from_chain(ms)]['resptime']<(self.k*Sm): 
-
-                    self.fog[fidx].update({
-                        'tserv':  tserv, 
-                        'stddev': std, 
-                        'mu':     mu, 
-                        'cv':     cv,
-                        'lambda': lam_tot,
-                        'twait':  twait,
-                        'tresp':  twait + tserv,
-                        'rho':    rho,    }) 
-
-                    self.fog[fidx]['microservices'].append(ms)      # Tracks the taken microservices 
+                    
                     self.mapping[self.get_service_idx()[ms]] = fidx # Maps that the microservice ms entered in the solution
-              
-                X_func = X_current # The old value of obj_func (X_func) replaced by the new value
-                
+                    break 
+                    # The opt solution is choosen and it doesnt need to search for better allocation
+
+                else:
+                    # This was not the best solution so we have to repeat this search with the remaining nodes
+                    self.mapping[self.get_service_idx()[ms]] = None
 
 
 if __name__ == "__main__":
     parser   = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
+    parser.add_argument("-o", "--output",help="output file. Default output.json")
     args     = parser.parse_args()
-    fname  = 'sample/' + (args.file or "sample_input2.json")
+    fname    = 'sample/' + (args.file or "sample_input2.json")
     
     with open(fname,) as f:
         data = json.load(f)
     
     problem  = Problem(data)
     sol      = SolutionMbfd(problem, [None, None, None]) 
+
+    fname = 'sample/' + (args.output or 'output.json')
+    with open(fname, "w") as f:
+        json.dump(sol.dump_solution(), f, indent=2)
