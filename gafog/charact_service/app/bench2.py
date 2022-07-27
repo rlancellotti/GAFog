@@ -2,7 +2,7 @@ import requests
 from datetime import date, datetime
 import time
 import json
-from TestData import TestData
+from .TestData import TestData
 
 class Benchmark:
     def __init__(self):
@@ -36,7 +36,7 @@ class Benchmark:
                 return "Json payload missing... Aborted"
         # TODO: implement logic for different payload types
 
-        for iter in range(0, num_runs):
+        for _ in range(0, num_runs):
             # Send requests to micros. API url
             self.testData.addIniTimestamp(datetime.now())
             if method == "get":

@@ -1,8 +1,8 @@
 from flask import Flask, request, jsonify
 import json
 import requests
-from bench import exec_test, save_execution
-from bench2 import Benchmark
+from .bench import exec_test, save_execution
+from .bench2 import Benchmark
 
 bench = Benchmark()
 app = Flask(__name__)

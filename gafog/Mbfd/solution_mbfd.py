@@ -11,6 +11,11 @@ class SolutionMbfd(Solution):
     k = 10 # Number multiplied by the sum of meanserv(Sm or Tc); SLA
  
     def __init__(self, problem:Problem, individual:list=[]):   
+        
+        
+        # If individual is not specified or is an empty list
+        if not(individual):
+            individual = [None] * problem.get_nservice()
 
         super().__init__(individual, problem)
 
@@ -84,8 +89,9 @@ class SolutionMbfd(Solution):
                    and self.resptimes[self.get_ms_from_chain(ms)]['resptime']<(self.k*Sm): 
                     
                     self.mapping[self.get_service_idx()[ms]] = fidx # Maps that the microservice ms entered in the solution
-                    break 
+                    
                     # The opt solution is choosen and it doesnt need to search for better allocation
+                    break 
 
                 else:
                     # This was not the best solution so we have to repeat this search with the remaining nodes
@@ -103,8 +109,8 @@ if __name__ == "__main__":
         data = json.load(f)
     
     problem  = Problem(data)
-    sol      = SolutionMbfd(problem, [None, None, None]) 
-
+    sol      = SolutionMbfd(problem, [None, None, None])
+    
     fname = 'sample/' + (args.output or 'output.json')
     with open(fname, "w") as f:
         json.dump(sol.dump_solution(), f, indent=2)

@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import json
 import requests
-from bench import exec_test, save_execution
+from .bench import exec_test, save_execution
 
 app = Flask(__name__)
 @app.post("/api/start")

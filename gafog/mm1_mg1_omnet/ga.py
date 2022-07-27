@@ -4,7 +4,7 @@ import numpy
 import math
 import datetime
 from .problem import Problem
-from fogindividual import FogIndividual
+from .fogindividual import FogIndividual
 import matplotlib.pyplot as plt
 from collections import namedtuple
 
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     deltamu=1
     delta = 0.01
     mu=deltamu/delta
-    problem = Problem('Tesi2.db', mu, delta, rho, K, maxrho)
+    problem = Problem('/gafog/mm1_mg1_omnet/Tesi2.db', mu, delta, rho, K, maxrho)
     toolbox=init_ga(problem)
     sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
     dump_solution(gaout1, sol)

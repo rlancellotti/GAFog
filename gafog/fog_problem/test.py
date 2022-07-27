@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 import unittest
-import sys
 import math
 
 from ..fog_problem.problem import Problem

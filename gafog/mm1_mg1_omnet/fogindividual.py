@@ -1,4 +1,4 @@
-from problem import Problem
+from ..fog_problem.problem import Problem
 import statistics
 from mako.template import Template
 from mako.runtime import Context

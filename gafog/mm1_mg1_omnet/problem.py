@@ -1,4 +1,4 @@
-import functions
+from . import functions
 import statistics
 
 class Problem:

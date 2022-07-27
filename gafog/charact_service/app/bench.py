@@ -26,7 +26,7 @@ def exec_test(data):
     
     timing_arr = []
 
-    for iter in range(0, num_runs):
+    for _ in range(0, num_runs):
         # Send request to micros. API location
         
         start = datetime.now()

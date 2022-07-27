@@ -17,10 +17,7 @@ class FogIndividual(Solution):
 
     def set_convergence_gen(self, convgen):
         self.set_extra_param('conv_gen', convgen)
-    
-    def registertime(self, deltatime):
-        self.set_extra_param('deltatime', deltatime)
-        
+            
 if __name__ == "__main__":
     with open('sample/sample_input.json',) as f:
         data = json.load(f)
