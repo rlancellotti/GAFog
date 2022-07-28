@@ -6,7 +6,9 @@ import numpy as np
 # Hack to find modules of other services
 sys.path.append('../')
 from ProblemGen.genproblem import get_problem
-from ChainOptService.ga import solve_problem
+from FogProblem.problem import Problem
+from OptService.optimize import send_response, solve_problem, available_algorithms
+#from GA.ga import solve_problem
 
 config={
     'nchain_fog': 0.4,
@@ -111,39 +113,41 @@ def run_experiment(par, values, nrun, config, mult, outfile):
     config['nchain']=int(config['nchain_fog']*config['nfog'])
     orig_param=config[par]
     result=[]
-    for val in values:
-        res=[]
-        print('Experiment: %s=%.1f\t'%(par,val), end='')
-        sys.stdout.flush()
-        for nr in range(nrun):
-            if mult<0:
-                fname='output_%s%d_run%d.json'%(par,val, nr)
-            else:
-                fname='output_%s%d_run%d.json'%(par,int(val*mult), nr)
-            config[par]=val
-            config['response']='file://%s'%fname
-            if os.path.isfile(fname):
-                print('K', end='')
-            else:
-                print('R', end='')
-                p=get_problem(config)
-                solve_problem(p)
+    for algo in available_algorithms:
+        for val in values:
+            res=[]
+            print('Experiment: %s=%.1f\t'%(par,val), end='')
             sys.stdout.flush()
-            #parse results
-            r=parse_result(fname)
-            if r is not None:
-                res.append(r)
-                print('+', end='')
-            else:
-                print('-', end='')
-            sys.stdout.flush()
-        # newline
-        print('')
-        #compute average over multiple runs
-        cr=collect_results(res)
-        cr= {par: val} | cr
-        result.append(cr)
-    dump_result(result, outfile)
+            for nr in range(nrun):
+                if mult<0:
+                    fname=f'output_{par}{val}_{algo.name}_run{nr}.json'
+                else:
+                    fname=f'output_{par}{int(val*mult)}_{algo.name}_run{nr}.json'
+                config[par]=val
+                config['response']=f'file://{fname}'
+                if os.path.isfile(fname):
+                    print('K', end='')
+                else:
+                    print('R', end='')
+                    p=get_problem(config)
+                    sol=solve_problem(p, algo)
+                    send_response(sol)
+                sys.stdout.flush()
+                #parse results
+                r=parse_result(fname)
+                if r is not None:
+                    res.append(r)
+                    print('+', end='')
+                else:
+                    print('-', end='')
+                sys.stdout.flush()
+            # newline
+            print('')
+            #compute average over multiple runs
+            cr=collect_results(res)
+            cr= {par: val} | cr
+            result.append(cr)
+        dump_result(result, outfile)
     config[par]=orig_param
 
 run_experiment('nsrv_chain', nservices, nrun, config, -1, 'sens_nsrv_chain.data')

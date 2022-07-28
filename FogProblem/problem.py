@@ -1,8 +1,6 @@
 import json
 import time
 
-from sklearn.decomposition import non_negative_factorization
-
 class Problem:
     def __init__(self, problem):
         self.response=problem['response'] if 'response' in problem.keys() else None
@@ -103,10 +101,10 @@ class Problem:
                 if self.sensor[s]['servicechain'] == sc:
                     lam += self.sensor[s]['lambda']
             self.servicechain[sc]['lambda']=lam
-            # intialize also lambda for each microservice
+            # intialize lambda for each microservice
             for s in self.servicechain[sc]['services']:
                 self.microservice[s]['lambda']=lam
-            # initilize weight of service chain if missing
+            # initialize weight of service chain if missing
             if 'weight' not in self.servicechain[sc]:
                 self.servicechain[sc]['weight']=lam
             tot_weight+=self.servicechain[sc]['weight']
