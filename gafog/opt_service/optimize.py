@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import sys
 import json
 import argparse
 import requests
@@ -29,6 +28,9 @@ def write_solution(fout, sol):
 
 
 def solve_problem(problem: Problem, algo):
+    if algo is None:
+        return None
+    #print(algo)
     match algo:
         case Algorithms.GA:
             return gamod.solve_problem(problem)
@@ -51,7 +53,7 @@ if __name__ == "__main__":
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
     parser.add_argument('-a', '--algo', help='algorithm. Available: GA (default), MBFD, VNS, AMPL')
     args = parser.parse_args()
-    fname='sample/' + (args.file or'sample_input2.json')
+    fname='sample/' + (args.file or 'sample_input2.json')
     algoname=args.algo or 'GA'
     algo=algorithm_by_name(algoname)
     if not(algo):

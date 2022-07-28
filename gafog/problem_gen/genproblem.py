@@ -2,7 +2,11 @@
 import argparse
 import numpy
 import json
-import sys
+
+from ..fog_problem.problem import Problem
+from ..fog_problem.solution import Solution
+from ..opt_service.optimize import solve_problem, send_response, Algorithms, algorithm_by_name
+
 
 SRVCV=1.0
 
@@ -107,18 +111,19 @@ def get_microservice(config):
 
 def get_problem(config):
     if bool(config['enable_network']):
-        return {'response': config['response'],
-                'fog': get_fog(config), 
-                'sensor': get_sensor(config), 
-                'servicechain': get_chain(config), 
-                'microservice': get_microservice(config), 
-                'network': get_network(config)}
+        rv = {'response': config['response'],
+              'fog': get_fog(config), 
+              'sensor': get_sensor(config), 
+              'servicechain': get_chain(config), 
+              'microservice': get_microservice(config), 
+              'network': get_network(config)}
     else:
-        return {'response': config['response'],
-                'fog': get_fog(config), 
-                'sensor': get_sensor(config), 
-                'servicechain': get_chain(config), 
-                'microservice': get_microservice(config)}
+        rv = {'response': config['response'],
+              'fog': get_fog(config), 
+              'sensor': get_sensor(config), 
+              'servicechain': get_chain(config), 
+              'microservice': get_microservice(config)}
+    return Problem(rv)
 
 
 if __name__ == "__main__":
@@ -127,6 +132,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help='output file. Default sample_problem.json')
     parser.add_argument('-c', '--config', help='config file. Default use default config')
     parser.add_argument('-s', '--solve',  action='store_true', help='solve problem')
+    parser.add_argument('-a', '--algo',  help='solution algorithm. Default GA')
     args = parser.parse_args()
     oname=args.output or 'sample/sample_problem.json'
     if args.config:
@@ -142,13 +148,15 @@ if __name__ == "__main__":
             'enable_network': True,
             'response': 'file://sample_output.json'
         }
+    algoname=args.algo or 'GA'
     fname=args.file or 'sample/sample_problem.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
-        json.dump(prob, f, indent=2)
+        json.dump(prob.dump_problem(), f, indent=2)
     if args.solve:
-        from ..ga.ga import solve_problem
-        solve_problem(prob)
+        sol=solve_problem(prob, algorithm_by_name(algoname))
+        if sol:
+            send_response(sol)
 
 
 

@@ -1,4 +1,7 @@
 import json
+import time
+
+#from sklearn.decomposition import non_negative_factorization
 
 class Problem:
     def __init__(self, problem):
@@ -16,6 +19,19 @@ class Problem:
         self.maxrho=0.999
         self.compute_service_params()
         self.compute_chain_params()
+
+    def dump_problem(self):
+        rv={
+            'fog': self.fog,
+            'sensor': self.sensor,
+            'servicechain': self.servicechain,
+            'microservice': self.microservice
+            }
+        if not self.network_is_fake:
+            rv['network']=self.network
+        if self.response is not None:
+            rv['response']=self.response
+        return rv
     
     def fake_network(self, fognodes):
         rv={}
@@ -133,6 +149,21 @@ class Problem:
     
     def get_response_url(self):
         return self.response
+    
+    def begin_solution(self):
+        self.start_time=time.perf_counter_ns()
+
+    def end_solution(self):
+        self.end_time=time.perf_counter_ns()
+        self.solution_time=(self.end_time-self.start_time)/1e+9
+        return self.solution_time
+
+    def get_solution_time(self):
+        try:
+            return self.solution_time
+        except AttributeError:
+            return -1.0
+
 
 if __name__ == '__main__':
     with open('sample/sample_input.json',) as f:
