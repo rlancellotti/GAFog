@@ -159,10 +159,10 @@ def run_experiment(par, values, nrun, config, mult, outfile):
     config[par] = orig_param
 
 
-run_experiment('nsrv_chain', nservices, nrun, config, -1, 'sens_nsrv_chain.data')
-run_experiment('rho', rhos, nrun, config, 10, 'sens_rho.data')
+run_experiment('nsrv_chain', nservices, nrun, config, -1, 'sample/sens_nsrv_chain.data')
+run_experiment('rho', rhos, nrun, config, 10, 'sample/sens_rho.data')
 config['nsrv_chain'] = 10
-run_experiment('nfog', nfogs, nrun, config, -1, 'sens_nfog.data')
+run_experiment('nfog', nfogs, nrun, config, -1, 'sample/sens_nfog.data')
 
 config = {
     'nchain_fog': 1.0 / 3,
