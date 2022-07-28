@@ -27,7 +27,7 @@ if __name__ == '__main__':
     with open(fdata, 'r') as f:
         data = json.load(f)
     out = process_template(ftemplate, data)
-    fout = args.output or 'graph.svg'
+    fout = args.output or 'sample/graph.svg'
     if fout.endswith('.dot'):
         with open(fout, 'w') as f:
             f.write(out)
