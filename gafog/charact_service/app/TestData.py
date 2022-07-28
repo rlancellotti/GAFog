@@ -1,6 +1,7 @@
 from datetime import date, datetime
 import statistics
 
+
 class TestData:
     # Timestamps
     init_t = []
@@ -22,7 +23,7 @@ class TestData:
 
     def addResponse(self, response):
         self.responses.append(response)
-    
+
     def clearData(self):
         self.final_t.clear()
         self.init_t.clear()
@@ -30,7 +31,7 @@ class TestData:
 
     # Obatin final output to return at the end of benchmark
     def computeRunTimes(self):
-        if(len(self.init_t) != len(self.final_t)):
+        if len(self.init_t) != len(self.final_t):
             return "Mismathing lenghts"
         else:
             deltas = []
@@ -42,5 +43,5 @@ class TestData:
             output = {"output": self.getResponses()}
             output["average"] = avg
             output["stddev"] = stddev
-            
+
             return output

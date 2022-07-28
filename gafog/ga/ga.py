@@ -5,42 +5,41 @@ import time
 import json
 import argparse
 from collections import namedtuple
+from deap import base, creator, tools, algorithms
 
 from ..fog_problem.problem import Problem
 from .fogindividual import FogIndividual
 
-from deap import base
-from deap import creator
-from deap import tools
-from deap import algorithms
+# numGen = 600    # number fo generations used in the GA
+# numPop = 600    # initial number of individuals at gen0
+numGen = 60  # number fo generations used in the GA
+numPop = 60  # initial number of individuals at gen0
+problem = None
 
-#numGen = 600    # number fo generations used in the GA
-#numPop = 600    # initial number of individuals at gen0
-numGen = 60    # number fo generations used in the GA
-numPop = 60    # initial number of individuals at gen0
-problem=None
 
 def obj_func(individual1):
     # FIXME: should remove this global dependency!
     global problem
-    ind=FogIndividual(individual1, problem)
+    ind = FogIndividual(individual1, problem)
     return ind.obj_func(),
 
 def load_individuals(creator, problem):
     individual = list()
     for i in range(problem.get_nservice()):
-        individual.append(random.randint(0,problem.get_nfog()-1))
+        individual.append(random.randint(0, problem.get_nfog() - 1))
     return creator(individual)
-        
+
+
 def mut_uniform_fog(individual, indpb):
     # FIXME: should remove this global dependency!
     global problem
     for i in range(len(individual)):
         if random.random() < indpb:
-            individual[i] = random.randint(0,problem.get_nfog()-1)
-    return individual,
+            individual[i] = random.randint(0, problem.get_nfog() - 1)
+    return (individual,)
 
-def cx_uniform_fog(ind1,ind2,indpb):
+
+def cx_uniform_fog(ind1, ind2, indpb):
     # FIXME: should remove this global dependency!
     global problem
     size = min(len(ind1), len(ind2))
@@ -48,6 +47,7 @@ def cx_uniform_fog(ind1,ind2,indpb):
         if random.random() < indpb:
             ind1[i], ind2[i] = ind2[i], ind1[i]
     return ind1, ind2
+
 
 def init_ga(problem):
     # Initialization
@@ -59,28 +59,29 @@ def init_ga(problem):
         pass
     creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
     creator.create("Individual", list, fitness=creator.FitnessMin)
-    toolbox.register("individual",load_individuals, creator.Individual, problem)
+    toolbox.register("individual", load_individuals, creator.Individual, problem)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-    
+
     toolbox.register("evaluate", obj_func)
-    toolbox.register("mate", cx_uniform_fog,indpb=0.5)
+    toolbox.register("mate", cx_uniform_fog, indpb=0.5)
     toolbox.register("mutate", mut_uniform_fog, indpb=0.05)
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
 
 def get_convergence(log, min_obj, eps=0.01):
-    #gen=log.select("gen")
-    stds=log.select("std")
-    mins=log.select("min")
-    convgen=-1
+    # gen=log.select("gen")
+    stds = log.select("std")
+    mins = log.select("min")
+    convgen = -1
     for i in range(len(mins)):
-        if ((mins[i]/min_obj)-1.0 <eps):
-            convgen=i
-            #print(mins[i], stds[i], convgen)
+        if (mins[i] / min_obj) - 1.0 < eps:
+            convgen = i
+            # print(mins[i], stds[i], convgen)
             break
-    #print(convgen)
+    # print(convgen)
     return convgen
+
 
 def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     # FIXME: should remove this global dependency!
@@ -99,43 +100,44 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem):
     stats.register("max", numpy.max)
     # Change verbose parameter to see population evolution
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
-                                   stats=stats, halloffame=hof, verbose=False)
-    best=FogIndividual(hof[0], problem)
-    convergence=get_convergence(log, best.obj_func())
+                                    stats=stats, halloffame=hof, verbose=False)
+    best = FogIndividual(hof[0], problem)
+    convergence = get_convergence(log, best.obj_func())
     best.set_convergence_gen(convergence)
     best.set_extra_param('max_gen', numGen)
     best.set_extra_param('population', numPop)
-    #gen=log.select("gen")
-    #mins=log.select("min")
-    #stds=log.select("std")
-    #plot_data(gen,mins,stds)
+    # gen=log.select("gen")
+    # mins=log.select("min")
+    # stds=log.select("std")
+    # plot_data(gen,mins,stds)
     return best
+
 
 def dump_solution(gaout, sol):
     with open(gaout, "w+") as f:
-            json.dump(sol.dump_solution(), f, indent=2)
+        json.dump(sol.dump_solution(), f, indent=2)
+
 
 def solve_problem(prob):
     # FIXME: should remove this global dependency!
     global problem
     cxbp = 0.5
     mutpb = 0.3
-    problem=prob
+    problem = prob
     problem.begin_solution()
-    toolbox=init_ga(problem)
-    sol=solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    toolbox = init_ga(problem)
+    sol = solve_ga_simple(toolbox, cxbp, mutpb, problem)
     problem.end_solution()
     sol.register_execution_time()
     return sol
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
     args = parser.parse_args()
-    fname=args.file or 'sample/sample_input2.json'
-    with open(fname,) as f:
+    fname = args.file or "sample/sample_input2.json"
+    with open(fname) as f:
         data = json.load(f)
-    sol=solve_problem(Problem(data))
+    sol = solve_problem(Problem(data))
     print(sol)
-
-

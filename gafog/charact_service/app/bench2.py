@@ -2,7 +2,9 @@ import requests
 from datetime import date, datetime
 import time
 import json
+
 from .TestData import TestData
+
 
 class Benchmark:
     def __init__(self):
@@ -48,9 +50,9 @@ class Benchmark:
             if method == "post":
                 r = requests.post(serv_location, json=json_data)
                 self.sync_save(r)
-            
+
             if r.status_code not in [200, 201, 204]:
-                return "Error: tested service returned unexpected  " + str(r.status_code) + " status code"
+                return ("Error: tested service returned unexpected  " + str(r.status_code) + " status code")
             else:
                 time.sleep(1)
         output = self.testData.computeRunTimes()
@@ -59,7 +61,7 @@ class Benchmark:
     def sync_save(self, request):
         if self.synced == "sync":
             self.testData.addFinTimestamp(datetime.now())
-            #self.testData.addResponse(json.loads(request.content.decode('utf8')))
+            # self.testData.addResponse(json.loads(request.content.decode('utf8')))
             self.testData.addResponse(self.parse_response(request))
 
     def save_execution(self, data):
