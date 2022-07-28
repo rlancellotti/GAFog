@@ -201,11 +201,11 @@ class Solution:
             sc=self.problem.get_chain_for_sensor(s)
             rv['servicechain'][sc]['sensors'].append(s)
         for msidx in range(self.nsrv):
-            if self.mapping[msidx]:
+            if self.mapping[msidx] is not None:
                 rv['microservice'][self.service[msidx]]=self.fognames[self.mapping[msidx]]
         for s in self.problem.sensor:
             msidx=self.serviceidx[self.problem.get_service_for_sensor(s)]
-            if self.mapping[msidx]:
+            if self.mapping[msidx] is not None:
                 rv['sensor'][s]=self.fognames[self.mapping[msidx]]
         for f in self.fog:
             rv['fog'][f['name']]={
