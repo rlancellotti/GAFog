@@ -140,16 +140,21 @@ if __name__ == "__main__":
             config=json.load(f)
     else:
         config={
-            'nchain': 1,
-            'nsrv_chain': 5,
-            'nfog': 4,
+            'nchain': 3,
+            'nsrv_chain': 8,
+            'nfog': 3,
             'tchain': 1.0,
-            'rho': 0.2,
+            'rho': 0.5,
             'enable_network': True,
             'response': 'file://sample_output.json'
         }
     algoname=args.algo if args.algo is not None else 'GA'
-    fname=args.file if args.output is not None else 'sample_problem.json'
+    if args.output is not None:
+        fname=args.output 
+        config['response']='file://%s'%fname.replace('.json', '_solution.json')
+    else:
+        fname='sample_problem.json'
+        config['response']='file://sample_output.json'
     prob=get_problem(config)
     with open(fname, 'w') as f:
         json.dump(prob.dump_problem(), f, indent=2)
