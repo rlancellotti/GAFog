@@ -1,16 +1,39 @@
+<%
+step=2
+nfog=len(mapping['fog'])
+nsc=len(mapping['servicechain'])
+nsens=len(mapping['sensor'])
+height=max(nfog, nsc, nsens)
+maxms=max(len(mapping['servicechain'][sc]['services']) for sc in mapping['servicechain'])
+width=maxms+1
+xmin={'sensor': 0, 'service':1, 'fog': width}
+ymin={'sensor': (height-nsens)/2, 'service':(height-nsc)/2, 'fog': (height-nsens)/2}
+def get_xpos(grp, n):
+    return (xmin[grp]+n)*step
+
+def get_ypos(grp, n):
+    return (ymin[grp]+n)*step
+
+%>
+
 strict digraph {
     compound=true;
     subgraph cluster_logical {
         // service chains
         label="Service chains"
         style="dashed"
-%for sc in mapping['servicechain']:
+%for nc, sc in enumerate(mapping['servicechain']):
         subgraph cluster_${sc} {
             label="${sc}"
-%for n, s in enumerate(mapping['servicechain'][sc]['services'].keys()):
-%if n!= len(mapping['servicechain'][sc]['services'])-1:
-          ${s} -> ${list(mapping['servicechain'][sc]['services'].keys())[n+1]}
-%endif
+%for ns, s in enumerate(mapping['servicechain'][sc]['services'].keys()):
+            ${s} [pos="${get_xpos('service', ns)}, ${get_ypos('service', nc)}!"]
+%endfor
+            \
+%for s in mapping['servicechain'][sc]['services'].keys():
+${s} \
+%if not loop.last: 
+-> \
+%endif         
 %endfor
 
         }
@@ -21,11 +44,9 @@ strict digraph {
             label="Fog nodes"
             style="dashed"
             node [shape=box]
-            {rank = same; \
-%for f in mapping['fog'].keys():
-${f} \
+%for nf, f in enumerate(mapping['fog']):
+            ${f} [pos="${get_xpos('fog', 0)}, ${get_ypos('fog', nf)}!"]
 %endfor
-}
             \
 %for f in mapping['fog'].keys():
 ${f} \
@@ -40,16 +61,14 @@ ${f} \
             style="dashed"
             label="Sensors"
             node [shape=circle]
-            {rank = same; \
-%for s in mapping['sensor']:
-${s} \
+%for ns, f in enumerate(mapping['sensor']):
+            ${f} [pos="${get_xpos('sensor', 0)}, ${get_ypos('sensor', ns)}!"]
 %endfor
-}
             \
 %for s in mapping['sensor']:
 ${s} \
 %if loop.last:
-[ style=invis ] 
+[ style=invis ]
 %else:
 -> \
 %endif
@@ -76,7 +95,7 @@ ${s} \
     subgraph {
         edge [style=dashed, color=orange]
 %for s in mapping['sensor']:
-        ${s} -> ${mapping['sensor'][s]} 
+        ${s} -> ${mapping['sensor'][s]}
 %endfor
     }
 }

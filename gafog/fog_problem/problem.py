@@ -1,9 +1,6 @@
 import json
 import time
 
-# from sklearn.decomposition import non_negative_factorization
-
-
 class Problem:
     def __init__(self, problem):
         self.response = problem['response'] if 'response' in problem.keys() else None

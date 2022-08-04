@@ -15,7 +15,7 @@ class Algorithms(Enum):
     MBFD = "MBFD"
     AMPL = "AMPL"
 
-
+# TODO: add mbfd to the list
 available_algorithms = [Algorithms.GA]
 
 
@@ -67,6 +67,6 @@ if __name__ == "__main__":
     with open(fname) as f:
         data = json.load(f)
     sol = solve_problem(Problem(data), algo)
-    print(sol)
+
     if sol:
         send_response(sol)

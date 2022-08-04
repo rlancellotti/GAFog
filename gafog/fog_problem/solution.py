@@ -142,7 +142,7 @@ class Solution:
         rho = lam / mu
         if mu > lam:
             rv = (1.0 / mu) * ((cva**2 + cvs**2) / 2.0) * (rho / (1.0 - rho))
-            print(f'G/G/1(tserv={1.0/mu}, cva={cva}, cvs={cvs}, rho={rho})={rv}')
+            #print(f'G/G/1(tserv={1.0/mu}, cva={cva}, cvs={cvs}, rho={rho})={rv}')
         else:
             rv = self.overload_waittime(mu, rho)
         return rv
@@ -187,7 +187,6 @@ class Solution:
         if not self.resptimes:
             self.resptimes = self.compute_performance()
         for sc in self.resptimes:
-            # FIXME: if part of the service chain is not allocated, the obj function should reflect this in the weights!
             tr_tot += (self.resptimes[sc]['resptime'] * self.problem.servicechain[sc]['weight'])
         return tr_tot
 

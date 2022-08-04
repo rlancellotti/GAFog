@@ -10,12 +10,11 @@ from deap import base, creator, tools, algorithms
 from ..fog_problem.problem import Problem
 from .fogindividual import FogIndividual
 
-# numGen = 600    # number fo generations used in the GA
-# numPop = 600    # initial number of individuals at gen0
-numGen = 60  # number fo generations used in the GA
-numPop = 60  # initial number of individuals at gen0
-problem = None
-
+numGen = 600    # number fo generations used in the GA
+numPop = 600    # initial number of individuals at gen0
+#numGen = 60    # number fo generations used in the GA
+#numPop = 60    # initial number of individuals at gen0
+problem=None
 
 def obj_func(individual1):
     # FIXME: should remove this global dependency!

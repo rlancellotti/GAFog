@@ -5,7 +5,7 @@ import json
 
 from ..fog_problem.problem import Problem
 from ..fog_problem.solution import Solution
-from ..opt_service.optimize import solve_problem, send_response, Algorithms, algorithm_by_name
+from ..opt_service.optimize import ( solve_problem, send_response, Algorithms, algorithm_by_name)
 
 
 SRVCV = 1.0
@@ -20,9 +20,9 @@ def get_net_id(i, j, n):
 
 
 def get_fog(config):
-    n_fog = int(config["nfog"])
-    mincap = float(config['mincap']) if 'mincap' in config.keys() else 0.1
-    avgcap = float(config['avgcap']) if 'avgcap' in config.keys() else 1.0
+    n_fog = int(config['nfog'])
+    mincap = float(config['mincap']) if "mincap" in config.keys() else 0.1
+    avgcap = float(config['avgcap']) if "avgcap" in config.keys() else 1.0
     fog = {}
     # generate capacities of fog nodes
     # fog nodes capcities are normally distribute with mean=avgcap, CoV=0.2
@@ -36,7 +36,7 @@ def get_fog(config):
     scale = sum(cap) / (avgcap * n_fog)
     for f in range(n_fog):
         nf = f + 1
-        fname = "F%d" % nf
+        fname = 'F%d' % nf
         fog[fname] = {'capacity': cap[f] / scale}
     return fog
 
@@ -53,7 +53,7 @@ def get_network(config):
     scale = sum(delay) / (delta * len(delay))
     for f1 in range(n_fog):
         for f2 in range(n_fog):
-            nname = "F%d-F%d" % (f1 + 1, f2 + 1)
+            nname = 'F%d-F%d' % (f1 + 1, f2 + 1)
             if f1 == f2:
                 network[nname] = {'delay': 0.0}
             else:
@@ -68,8 +68,8 @@ def get_sensor(config):
     for c in range(n_chain):
         # each service chain has a sensor
         nc = c + 1
-        cname = 'SC%d'%nc
-        sname = 'S%d'%nc
+        cname = 'SC%d' % nc
+        sname = 'S%d' % nc
         sensor[sname] = {'servicechain': cname, 'lambda': lam}
     return sensor
 
@@ -80,12 +80,12 @@ def get_chain(config):
     chain = {}
     for c in range(n_chain):
         nc = c + 1
-        cname = 'SC%d'%nc
+        cname = 'SC%d' % nc
         chain[cname] = {'services': []}
         # add services
         for s in range(n_srv_chain):
             ns = s + 1
-            sname = 'MS%d_%d'%(nc,ns)
+            sname = 'MS%d_%d' % (nc, ns)
             chain[cname]['services'].append(sname)
     return chain
 
@@ -107,60 +107,68 @@ def get_microservice(config):
         # add services
         for s in range(n_srv_chain):
             ns = s + 1
-            sname = 'MS%d_%d'%(c+1,ns)
+            sname = 'MS%d_%d' % (c + 1, ns)
             # compute service time
             t_srv = ts[ns] - ts[ns - 1]
             # Here is the CoV
-            microservice[sname] = {"meanserv": t_srv, "stddevserv": SRVCV * t_srv}
+            microservice[sname] = {'meanserv': t_srv, 'stddevserv': SRVCV * t_srv}
     return microservice
 
 
 def get_problem(config):
     if bool(config['enable_network']):
-        rv = {'response': config['response'],
-              'fog': get_fog(config), 
-              'sensor': get_sensor(config), 
-              'servicechain': get_chain(config), 
-              'microservice': get_microservice(config), 
-              'network': get_network(config)
-              }
+        rv = {
+            'response': config['response'],
+            'fog': get_fog(config),
+            'sensor': get_sensor(config),
+            'servicechain': get_chain(config),
+            'microservice': get_microservice(config),
+            'network': get_network(config),
+            }
+
     else:
-        rv = {'response': config['response'],
-              'fog': get_fog(config), 
-              'sensor': get_sensor(config), 
-              'servicechain': get_chain(config), 
-              'microservice': get_microservice(config)
-              }
+        rv = {
+            'response': config['response'],
+            'fog': get_fog(config),
+            'sensor': get_sensor(config),
+            'servicechain': get_chain(config),
+            'microservice': get_microservice(config),
+            }
     return Problem(rv)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', help="output file. Default sample_problem.json")
     parser.add_argument('-o', '--output', help="output file. Default sample_problem.json")
     parser.add_argument('-c', '--config', help="config file. Default use default config")
     parser.add_argument('-s', '--solve', action="store_true", help="solve problem")
     parser.add_argument('-a', '--algo', help="solution algorithm. Default GA")
     args = parser.parse_args()
     oname = args.output or "sample/sample_problem.json"
-    if args.config:
+    if args.config is not None:
         with open(args.config, 'r') as f:
             config = json.load(f)
     else:
         config = {
-            'nchain': 1,
-            'nsrv_chain': 5,
-            'nfog': 4,
+            'nchain': 3,
+            'nsrv_chain': 8,
+            'nfog': 3,
             'tchain': 1.0,
-            'rho': 0.2,
+            'rho': 0.5,
             'enable_network': True,
-            'response': "file://sample_output.json"
-            }
+            'response': "file://sample_output.json",
+        }
     algoname = args.algo or "GA"
-    fname = args.file or "sample/sample_problem.json"
+    if args.output is not None:
+        fname = args.output
+        config['response'] = "file://%s" % fname.replace(".json", "_solution.json")
+    else:
+        fname = "sample/sample_problem.json"
+        config['response'] = "file://sample_output.json"
     prob = get_problem(config)
     with open(fname, 'w') as f:
         json.dump(prob.dump_problem(), f, indent=2)
+
     if args.solve:
         sol = solve_problem(prob, algorithm_by_name(algoname))
         if sol:
