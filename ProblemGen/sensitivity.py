@@ -20,6 +20,18 @@ config={
     'response': 'file://sample_output.json'
 }
 
+class Sensitivity:
+    def __init__(self, param_name: str, values: list, mult: float):
+        self.param=param_name
+        self.values=values
+        self.mult=mult
+
+    def get_values(self):
+        return self.values
+    
+    def get_param(self):
+        return self.param
+
 nrun=2
 nservices=[3, 5]
 rhos=[0.5, 0.7]
@@ -109,7 +121,7 @@ def dump_result(res, fname):
             f.write(s+'\n')
 
 
-def run_experiment(par, values, nrun, config, mult, outfile):
+def run_experiment(par: str, values: list, nrun: int, config: dict, mult: float, outfile: str):
     config['nchain']=int(config['nchain_fog']*config['nfog'])
     orig_param=config[par]
     result=[]
