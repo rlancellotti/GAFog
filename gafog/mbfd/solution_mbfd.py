@@ -23,6 +23,9 @@ class SolutionMbfd(Solution):
         self.service = self.sort_ms(problem)  # List of microservices sorted by capacity(Sm or meanserv)
         self.compute_solution()  # Elaborates the optimal solution
 
+
+# TODO: aggiungere soluzione da indice sorted a indice std
+
     def sort_fog(self, problem: Problem):
         """It sorts fog nodes by capacity and initialize the status params."""
 
