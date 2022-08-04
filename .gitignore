@@ -1,5 +1,5 @@
-*/__pycache__/*
-*/venv/*
+**/__pycache__/**
+**/venv/**
 *.ini
 *.png
 *.dot
@@ -10,13 +10,13 @@
 *.gnuplot
 data.*
 fog*.ned
-MM1-MG1-Omnet/osmarender/*
+MM1-MG1-Omnet/osmarender/**
 fogconfig.json
 output_*.json
-*/sample_problem.json
-*/sample_output.json
-*/sample_output*.json
-*/sample_input*.json
+**/sample_problem.json
+**/sample_output.json
+**/sample_output*.json
+**/sample_input*.json
 
 GA.code-workspace
 Pipfile
