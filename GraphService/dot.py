@@ -4,6 +4,10 @@ import argparse
 import json
 import subprocess
 import pathlib
+import os
+
+#ENGINE='dot'
+ENGINE='neato'
 
 def get_filename(ftemplate):
     return ftemplate.replace('.mako', '')
@@ -14,7 +18,7 @@ def process_template(ftemplate, sol):
 
 def render_image(dotcode, outtype='svg'):
     #subprocess.run(['dot', dotfile, '-Tsvg', '-O'])
-    p = subprocess.run(['dot', '-T%s'%outtype], input=bytearray(dotcode.encode()), capture_output=True)
+    p = subprocess.run([ENGINE, '-T%s'%outtype], input=bytearray(dotcode.encode()), capture_output=True)
     return p.stdout
 
 if __name__ == '__main__':
@@ -23,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--file', help='input file. Default use sample_output.json')
     args = parser.parse_args()
     fdata = args.file if args.file is not None else 'sample_output.json'
-    ftemplate = 'graph.dot.mako'
+    ftemplate = os.path.dirname(os.path.realpath(__file__)) + '/graph.dot.mako'
     with open(fdata, 'r') as f:
         data = json.load(f)
     out = process_template(ftemplate, data)
