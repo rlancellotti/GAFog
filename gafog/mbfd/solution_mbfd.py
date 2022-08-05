@@ -23,8 +23,27 @@ class SolutionMbfd(Solution):
         self.service = self.sort_ms(problem)  # List of microservices sorted by capacity(Sm or meanserv)
         self.compute_solution()  # Elaborates the optimal solution
 
+    def get_initial_fog_idx(self):
+            """ Returns a dictonary with key=fog node not sorted and with value= position/index of the fog. 
+                Used to search the standard mapping list.
+            """
 
-# TODO: aggiungere soluzione da indice sorted a indice std
+            rv = {}
+            i = 0
+            for f in self.problem.fog.keys():
+                rv[f] = i
+                i += 1
+            return rv
+      
+    def get_std_map(self):
+        """ This function returns a list of the changed mapping.
+            This should be used to pass between different algorithms' resolution because it normalizes the mapping solution
+            if the fog nodes' order change.
+        """
+
+        ini = self.get_initial_fog_idx()
+        return [ini[self.fognames[fidx]] for fidx in self.mapping]
+
 
     def sort_fog(self, problem: Problem):
         """It sorts fog nodes by capacity and initialize the status params."""
@@ -99,10 +118,9 @@ class SolutionMbfd(Solution):
         self.set_extra_param('execution time', self.problem.end_solution())
 
     def compare(self):
-        """Not finished yet, It should compare the obj_func of two different solution."""
-        # TODO: it should be done with ga algorithm?
-
-        sol = Solution(self.mapping, self.problem)
+        """ It compares the obj_func of two different solution."""
+        
+        sol = Solution(self.get_std_map(), self.problem)
         print(f'Solution\'s obj func: {sol.obj_func()}')
         print(f'SolutionMbfd\'s obj func: {self.obj_func()}')
 
@@ -119,6 +137,7 @@ if __name__ == "__main__":
 
     problem = Problem(data)
     sol = SolutionMbfd(problem, [None, None, None])
+    sol.compare()
 
     fname = "sample/" + (args.output or "output.json")
     with open(fname, "w") as f:
