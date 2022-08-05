@@ -96,7 +96,7 @@ class SolutionMbfd(Solution):
                 else:
                     # This was not the best solution so we have to repeat this search with the remaining nodes
                     self.mapping[self.serviceidx[ms]] = None
-        print(self.problem.end_solution())
+        self.set_extra_param('execution time', self.problem.end_solution())
 
     def compare(self):
         """Not finished yet, It should compare the obj_func of two different solution."""
