@@ -190,6 +190,17 @@ python-dateutil = ">=2.7"
 setuptools_scm = ">=4"
 
 [[package]]
+name = "neato"
+version = "1.0.0"
+description = "An implementation of NEAT (NeuroEvolution of Augmenting Topologies) by Kenneth O. Stanley"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "numpy"
 version = "1.23.1"
 description = "NumPy is the fundamental package for array computing with Python."
@@ -331,7 +342,7 @@ watchdog = ["watchdog"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "35e81f4d92c9d054e43e4cffbcbef8b4a53abb889ed5bb9cf833157a0c430ed2"
+content-hash = "3b1871344e0ceee9beb6d44095d01d9f5cb58fa2da3c2cb042018f7b01ac5399"
 
 [metadata.files]
 certifi = [
@@ -548,6 +559,10 @@ matplotlib = [
     {file = "matplotlib-3.5.2-pp37-pypy37_pp73-manylinux_2_12_x86_64.manylinux2010_x86_64.whl", hash = "sha256:4fa28ca76ac5c2b2d54bc058b3dad8e22ee85d26d1ee1b116a6fd4d2277b6a04"},
     {file = "matplotlib-3.5.2-pp37-pypy37_pp73-win_amd64.whl", hash = "sha256:24173c23d1bcbaed5bf47b8785d27933a1ac26a5d772200a0f3e0e38f471b001"},
     {file = "matplotlib-3.5.2.tar.gz", hash = "sha256:48cf850ce14fa18067f2d9e0d646763681948487a8080ec0af2686468b4607a2"},
+]
+neato = [
+    {file = "neato-1.0.0-py3-none-any.whl", hash = "sha256:a89260bb2e2679d7d180da562d5f1536f4e589726dc4c2d37710e391e460075f"},
+    {file = "neato-1.0.0.tar.gz", hash = "sha256:200dd134e687f4bed05695c53f65945f4dfbe4e4ec9725802a49367646643671"},
 ]
 numpy = [
     {file = "numpy-1.23.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:b15c3f1ed08df4980e02cc79ee058b788a3d0bef2fb3c9ca90bb8cbd5b8a3a04"},

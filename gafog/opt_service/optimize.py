@@ -7,6 +7,7 @@ from enum import Enum
 from ..fog_problem.problem import Problem
 from ..fog_problem.solution import Solution
 from ..ga import ga as gamod
+from ..mbfd import mbfd as mbfdmod
 
 
 class Algorithms(Enum):
@@ -15,15 +16,13 @@ class Algorithms(Enum):
     MBFD = "MBFD"
     AMPL = "AMPL"
 
-# TODO: add mbfd to the list
-available_algorithms = [Algorithms.GA]
+available_algorithms = [Algorithms.GA, Algorithms.MBFD]
 
 
 def algorithm_by_name(algo):
     for a in available_algorithms:
         if algo == a.name:
             return a
-    return None
 
 
 def write_solution(fout, sol):
@@ -38,6 +37,10 @@ def solve_problem(problem: Problem, algo):
     match algo:
         case Algorithms.GA:
             return gamod.solve_problem(problem)
+
+        case Algorithms.MBFD:
+            return mbfdmod.solve_problem(problem)
+
 
 
 def send_response(sol: Solution, default_url=None):
