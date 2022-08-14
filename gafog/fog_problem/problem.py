@@ -2,6 +2,7 @@ import json
 import time
 
 class Problem:
+    
     def __init__(self, problem):
         self.response = problem['response'] if 'response' in problem.keys() else None
         self.fog = problem['fog']

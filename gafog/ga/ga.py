@@ -14,7 +14,7 @@ numGen = 600    # number fo generations used in the GA
 numPop = 600    # initial number of individuals at gen0
 #numGen = 60    # number fo generations used in the GA
 #numPop = 60    # initial number of individuals at gen0
-problem=None
+problem = None
 
 def obj_func(individual1):
     # FIXME: should remove this global dependency!
@@ -22,7 +22,7 @@ def obj_func(individual1):
     ind = FogIndividual(individual1, problem)
     return ind.obj_func(),
 
-def load_individuals(creator, problem):
+def load_individuals(creator, problem:Problem):
     individual = list()
     for i in range(problem.get_nservice()):
         individual.append(random.randint(0, problem.get_nfog() - 1))
@@ -82,7 +82,7 @@ def get_convergence(log, min_obj, eps=0.01):
     return convgen
 
 
-def solve_ga_simple(toolbox, cxbp, mutpb, problem):
+def solve_ga_simple(toolbox, cxbp, mutpb, problem:Problem):
     # FIXME: should remove this global dependency!
     # GA solver
     global numPop, numGen
@@ -134,9 +134,15 @@ def solve_problem(prob):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
+    parser.add_argument('-o', '--output', help="output file. Default sample_output2.json")
+
     args = parser.parse_args()
     fname = args.file or "sample/sample_input2.json"
     with open(fname) as f:
         data = json.load(f)
     sol = solve_problem(Problem(data))
     print(sol)
+
+    fname = "sample/" + (args.output or "sample_output2.json")
+    with open(fname, "w") as f:
+        json.dump(sol.dump_solution(), f, indent=2)

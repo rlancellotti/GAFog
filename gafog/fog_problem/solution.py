@@ -80,8 +80,8 @@ class Solution:
                 lam_tot += ms['lambda']
             if lam_tot != 0:
                 tserv = tserv / lam_tot
-                std = sqrt((std/lam_tot) - (tserv**2))
                 tserv = tserv / f['capacity']
+                std = sqrt((std/lam_tot) - (tserv**2))
                 std = std / f['capacity']
                 # compute mu and Cov for node
                 cv = std / tserv
