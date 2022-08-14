@@ -73,7 +73,7 @@ def generations(data):
     return data['extra']['conv_gen']
 
 
-def parse_result(fname):
+def parse_result(fname, algo):
 
     with open(fname, 'r') as f:
         data = json.load(f)
@@ -82,16 +82,28 @@ def parse_result(fname):
         j = jain(data)
         (r, s) = resp(data)
         h = nhop(data)
-        gt = gatime(data)
-        gen = generations(data)
-    return {
-        'jain': j,
-        'tresp_avg': r,
-        'tresp_std': s,
-        'nhop': h,
-        'gatime': gt,
-        'convgen': gen,
-        }
+        
+        # TODO: better code
+        if 'MBFD' not in str(algo):
+            gt = gatime(data)
+            gen = generations(data)
+
+            return {
+                'jain': j,
+                'tresp_avg': r,
+                'tresp_std': s,
+                'nhop': h,
+                'gatime': gt,
+                'convgen': gen,
+                }
+        else:
+            return {
+                'jain': j,
+                'tresp_avg': r,
+                'tresp_std': s,
+                'nhop': h,
+                }
+        
 
 
 def collect_results(res):
@@ -132,8 +144,7 @@ def run_experiment(par, values, nrun, config, mult, outfile):
     for algo in available_algorithms:
         for val in values:
             res = []
-            print("Experiment: %s=%.1f\t" % (par, val), end="")
-            sys.stdout.flush()
+            print("Experiment: %s=%.1f\t" % (par, val), end="", flush=True)
             for nr in range(nrun):
                 if mult < 0:
                     fname = f"sample/output_{par}{val}_{algo.name}_run{nr}.json"
@@ -142,21 +153,19 @@ def run_experiment(par, values, nrun, config, mult, outfile):
                 config[par] = val
                 config['response'] = f"file://{fname}"
                 if os.path.isfile(fname):
-                    print("K", end="")
+                    print("K", end="", flush=True)
                 else:
-                    print("R", end="")
+                    print("R", end="", flush=True)
                     p = get_problem(config)
                     sol = solve_problem(p, algo)
                     send_response(sol)
-                sys.stdout.flush()
                 # parse results
-                r = parse_result(fname)
+                r = parse_result(fname, algo)
                 if r is not None:
                     res.append(r)
-                    print("+", end="")
+                    print("+", end="", flush=True)
                 else:
-                    print("-", end="")
-                sys.stdout.flush()
+                    print("-", end="", flush=True)
             # newline
             print("")
             # compute average over multiple runs

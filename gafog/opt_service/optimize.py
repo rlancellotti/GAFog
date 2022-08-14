@@ -44,6 +44,8 @@ def solve_problem(problem: Problem, algo):
 
 
 def send_response(sol: Solution, default_url=None):
+    
+    # FIXME: If in the input file there is file://<name>.json then the output is not saved in sample/
     resp = sol.get_problem().get_response_url()
     if resp is None:
         if default_url is None:
@@ -67,8 +69,10 @@ if __name__ == "__main__":
     algo = algorithm_by_name(algoname)
     if not (algo):
         raise NameError(f'algorithm {algoname} is not valid')
+
     with open(fname) as f:
         data = json.load(f)
+
     sol = solve_problem(Problem(data), algo)
 
     if sol:
