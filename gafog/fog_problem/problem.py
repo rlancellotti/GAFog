@@ -25,7 +25,8 @@ class Problem:
             'sensor': self.sensor,
             'servicechain': self.servicechain,
             'microservice': self.microservice
-        }
+            }
+            
         if not self.network_is_fake:
             rv['network'] = self.network
         if self.response is not None:
