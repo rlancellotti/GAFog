@@ -26,7 +26,8 @@ class SolutionMbfd(Solution):
         self.compute_solution()  # Elaborates the optimal solution
 
     def get_initial_fog_idx(self):
-            """ Returns a dictonary with key=fog node not sorted and with value= position/index of the fog. 
+            """ 
+                Returns a dictonary with key=fog node not sorted and with value= position/index of the fog. 
                 Used to search the standard mapping list.
             """
 
@@ -38,7 +39,8 @@ class SolutionMbfd(Solution):
             return rv
       
     def get_std_map(self):
-        """ This function returns a list of the changed mapping.
+        """ 
+            This function returns a list of the changed mapping.
             This should be used to pass between different algorithms' resolution because it normalizes the mapping solution
             if the fog nodes' order change.
         """
@@ -80,6 +82,12 @@ class SolutionMbfd(Solution):
         # For all the microservices (sorted)
         for ms in self.sort_ms():
 
+            # If the map for the ms is already choose
+            if self.mapping[self.serviceidx[ms]] is not None:
+                # Maps the idx of THIS algorithm (fog changed)
+                self.mapping[self.serviceidx[ms]] = self.get_initial_fog_idx()[self.fognames[self.mapping[self.serviceidx[ms]]]]
+                continue
+
             prev = {'fidx': 0, 'fun': None}
             s = self.get_ms_from_chain(ms)
 
@@ -103,8 +111,8 @@ class SolutionMbfd(Solution):
             self.mapping[self.serviceidx[ms]] = prev['fidx']
 
         self.compute_fog_status()
-        self.resptimes = self.compute_performance()
-        self.set_extra_param('execution time', self.problem.end_solution())
+        self.resptimes = self.compute_performance()   
+        self.set_extra_param('deltatime', self.problem.end_solution())
 
 
     def compare(self):

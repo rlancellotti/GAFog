@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import json
 import argparse
 import requests
@@ -45,7 +44,7 @@ def solve_problem(problem: Problem, algo):
 
 def send_response(sol: Solution, default_url=None):
     
-    # FIXME: If in the input file there is file://<name>.json then the output is not saved in sample/
+    # NB: If in the input file there is file://<name>.json then the output is not saved in sample/
     resp = sol.get_problem().get_response_url()
     if resp is None:
         if default_url is None:

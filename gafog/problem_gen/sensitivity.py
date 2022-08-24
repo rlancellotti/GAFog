@@ -1,11 +1,8 @@
-#!/usr/bin/python3
-import sys
 import os.path
 import json
 import numpy as np
 
 from .genproblem import get_problem
-from ..fog_problem.problem import Problem
 from ..opt_service.optimize import send_response, solve_problem, available_algorithms
 # from ..ga.ga import solve_problem
 
@@ -66,12 +63,17 @@ def resp(data):
 
 
 def gatime(data):
-    return data['extra']['deltatime']
+    if 'deltatime' in data['extra']:
+        return data['extra']['deltatime']
+    else:
+        return 0.0
 
 
 def generations(data):
-    return data['extra']['conv_gen']
-
+    if 'conv_gen' in data['extra']:
+        return data['extra']['conv_gen']
+    else:
+        return 0.0
 
 def parse_result(fname, algo):
 
@@ -82,28 +84,17 @@ def parse_result(fname, algo):
         j = jain(data)
         (r, s) = resp(data)
         h = nhop(data)
-        
-        # TODO: better code
-        if 'MBFD' not in str(algo):
-            gt = gatime(data)
-            gen = generations(data)
+        gt = gatime(data)
+        gen = generations(data)
 
-            return {
+        return {
                 'jain': j,
                 'tresp_avg': r,
                 'tresp_std': s,
                 'nhop': h,
                 'gatime': gt,
                 'convgen': gen,
-                }
-        else:
-            return {
-                'jain': j,
-                'tresp_avg': r,
-                'tresp_std': s,
-                'nhop': h,
-                }
-        
+                }     
 
 
 def collect_results(res):
@@ -172,14 +163,14 @@ def run_experiment(par, values, nrun, config, mult, outfile):
             cr = collect_results(res)
             cr = {par: val} | cr
             result.append(cr)
-        dump_result(result, outfile)
+        dump_result(result, outfile+f'{algo.name}.data')
     config[par] = orig_param
 
 
-run_experiment("nsrv_chain", nservices, nrun, config, -1, "sample/sens_nsrv_chain.data")
-run_experiment("rho", rhos, nrun, config, 10, "sample/sens_rho.data")
+run_experiment("nsrv_chain", nservices, nrun, config, -1, "sample/sens_nsrv_chain")
+run_experiment("rho", rhos, nrun, config, 10, "sample/sens_rho")
 config['nsrv_chain'] = 10
-run_experiment("nfog", nfogs, nrun, config, -1, "sample/sens_nfog.data")
+run_experiment("nfog", nfogs, nrun, config, -1, "sample/sens_nfog")
 
 config = {
     'nchain_fog': 1.0 / 3,
@@ -191,4 +182,4 @@ config = {
     'response': "file://sample_output.json",
     }
 
-run_experiment("nfog", [3], 1, config, -1, "sample/sample.data")
+run_experiment("nfog", [3], 1, config, -1, "sample/sample")

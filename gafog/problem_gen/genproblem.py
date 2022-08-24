@@ -4,7 +4,6 @@ import numpy
 import json
 
 from ..fog_problem.problem import Problem
-from ..fog_problem.solution import Solution
 from ..opt_service.optimize import ( solve_problem, send_response, Algorithms, algorithm_by_name)
 
 
@@ -150,11 +149,11 @@ if __name__ == '__main__':
             config = json.load(f)
     else:
         config = {
-            'nchain': 3,
-            'nsrv_chain': 8,
-            'nfog': 3,
-            'tchain': 1.0,
-            'rho': 0.5,
+            'nchain': 4,
+            'nsrv_chain': 5,
+            'nfog': 10,
+            'tchain': 0.01,
+            'rho': 0.6,
             'enable_network': True,
             'response': "file://sample_output.json",
         }
