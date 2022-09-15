@@ -99,10 +99,10 @@ class SolutionMbfd(Solution):
                 self.resptimes = self.compute_performance()  # To compute resptime (Rc)
                 obj = self.obj_func()
 
-             
                 if prev['fun'] is None:
                     prev['fun'] = obj
 
+                # Decides if the new solution its better and feseable or not
                 elif prev['fun'] > obj and self.fog[fidx]['lambda'] < self.fog[fidx]['mu']\
                      and self.fog[fidx]['tresp'] < (self.k * self.resptimes[s]['servicetime']):
                     
