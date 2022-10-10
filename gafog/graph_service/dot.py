@@ -6,8 +6,8 @@ import subprocess
 import pathlib
 import os
 
-#ENGINE='dot'
-ENGINE='neato'
+ENGINE='dot'
+#ENGINE='neato'
 
 
 def get_filename(ftemplate):
@@ -26,9 +26,9 @@ def render_image(dotcode, outtype='svg'):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', help='output file. Default graph.svg')
-    parser.add_argument('-f', '--file', help='input file. Default use utput.json')
+    parser.add_argument('-f', '--file', help='input file. Default use sample_output.json')
     args = parser.parse_args()
-    fdata = args.file or "sample/output.json"
+    fdata = args.file or "sample/sample_output.json"
     ftemplate = os.path.dirname(os.path.realpath(__file__)) + '/graph.dot.mako'
     with open(fdata, 'r') as f:
         data = json.load(f)
