@@ -16,15 +16,16 @@ config = {
     'response': "file://sample_output.json",
 }
 
-nrun = 2
-nservices = [3, 5]
-rhos = [0.5, 0.7]
-nfogs = [10, 15]
-# nrun=10
-# nservices=[3, 4, 5, 6, 7, 8, 9, 10]
-# rhos=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
-# nfogs=[5, 10, 15, 20, 25]
+nrun          = 10
+nservices     = [3, 4, 5, 6, 7, 8, 9, 10, 12, 15]
+rhos          = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+nfogs         = [5, 10, 15, 20, 25]
+delta_tchains = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2]
 
+# nrun      = 2
+# nservices = [3, 5]
+# rhos      = [0.5, 0.7]
+# nfogs     = [10, 15]
 
 def nhop(data):
     nhop = 0
@@ -179,6 +180,7 @@ config = {
     'tchain': 10.0,
     'rho': 0.3,
     'enable_network': True,
+    # delta_tchain = network/tchain
     'response': "file://sample_output.json",
     }
 
