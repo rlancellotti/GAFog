@@ -7,6 +7,7 @@ from ..fog_problem.problem import Problem
 from ..fog_problem.solution import Solution
 from ..ga import ga as gamod
 from ..mbfd import mbfd as mbfdmod
+from ..vns.vns import solve_problem as vnsmod
 
 
 class Algorithms(Enum):
@@ -15,7 +16,7 @@ class Algorithms(Enum):
     MBFD = "MBFD"
     AMPL = "AMPL"
 
-available_algorithms = [Algorithms.GA, Algorithms.MBFD]
+available_algorithms = [Algorithms.GA, Algorithms.MBFD,Algorithms.VNS]
 
 
 def algorithm_by_name(algo):
@@ -39,6 +40,9 @@ def solve_problem(problem: Problem, algo):
 
         case Algorithms.MBFD:
             return mbfdmod.solve_problem(problem)
+
+        case Algorithms.VNS:
+            return vnsmod(problem)
 
 
 
