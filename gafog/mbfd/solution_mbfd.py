@@ -114,8 +114,12 @@ class SolutionMbfd(Solution):
         self.resptimes = self.compute_performance()   
         self.set_extra_param('deltatime', self.problem.end_solution())
 
-
     def compare(self):
+        """
+            Compare if the solution in MBFD and in a solution with the same map are the same.
+            This function is not usefull anymore because in MBFD's compute_solution some of the Solution's
+            function are used directly to determine the optimal solution.
+        """
 
         sol = Solution(self.get_std_map(), self.problem)
         print(f"Solution: {sol.obj_func()}")
@@ -126,7 +130,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
     parser.add_argument('-o', '--output', help="output file. Default output.json")
-    args = parser.parse_args()
+    args  = parser.parse_args()
     fname = (args.file or "sample/sample_input2.json")
 
     with open(fname) as f:
