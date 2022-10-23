@@ -93,7 +93,7 @@ def parse_result(fname, algo):
                 'tresp_avg': r,
                 'tresp_std': s,
                 'nhop': h,
-                'gatime': gt,
+                'deltatime': gt,
                 'convgen': gen,
                 }     
 
@@ -132,8 +132,9 @@ def dump_result(res, fname):
 def run_experiment(par, values, nrun, config, mult, outfile):
     config['nchain'] = int(config['nchain_fog'] * config['nfog'])
     orig_param = config[par]
-    result = []
     for algo in available_algorithms:
+        print(f'\n{algo.name}')
+        result = []
         for val in values:
             res = []
             print("Experiment: %s=%.1f\t" % (par, val), end="", flush=True)
@@ -172,6 +173,8 @@ run_experiment("nsrv_chain", nservices, nrun, config, -1, "sample/sens_nsrv_chai
 run_experiment("rho", rhos, nrun, config, 10, "sample/sens_rho")
 config['nsrv_chain'] = 10
 run_experiment("nfog", nfogs, nrun, config, -1, "sample/sens_nfog")
+#run_experiment("tchain", delta_tchains, nrun, config, -1, "sample/sens_tchain")
+
 
 config = {
     'nchain_fog': 1.0 / 3,

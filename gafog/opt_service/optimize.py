@@ -11,8 +11,8 @@ from ..vns.vns import solve_problem as vnsmod
 
 
 class Algorithms(Enum):
-    GA = "GA"
-    VNS = "VNS"
+    GA   = "GA"
+    VNS  = "VNS"
     MBFD = "MBFD"
     AMPL = "AMPL"
 
