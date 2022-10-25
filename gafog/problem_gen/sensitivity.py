@@ -13,6 +13,7 @@ config = {
     'tchain': 10.0,
     'rho': 0.6,
     'enable_network': True,
+    'delta_tchain': 0.05,
     'response': "file://sample_output.json",
 }
 
@@ -33,12 +34,11 @@ def nhop(data):
         ms = data['servicechain'][sc]['services']
         prevfog = None
         for s in ms:
-            curfog = data['microservice'][s]
+            curfog   = data['microservice'][s]
             if prevfog is not None and curfog != prevfog:
                 nhop += 1
-            prevfog = curfog
+            prevfog  = curfog
     return nhop / len(data['servicechain'])
-
 
 def jain(data):
     rho = []
@@ -47,13 +47,13 @@ def jain(data):
     cv = np.std(rho) / np.mean(rho)
     return 1.0 / (1.0 + (cv**2))
 
-
 def valid_solution(data):
+    """ A valid solutiona have all the rho of the nodes < 1. """ 
+
     for f in data['fog']:
         if data['fog'][f]['rho'] >= 1:
             return False
     return True
-
 
 def resp(data):
     # print(data)
@@ -62,13 +62,13 @@ def resp(data):
         tr.append(data['servicechain'][sc]['resptime'])
     return (np.mean(tr), np.std(tr))
 
-
 def gatime(data):
+    """ Returns the execution time. """
+    
     if 'deltatime' in data['extra']:
         return data['extra']['deltatime']
     else:
         return 0.0
-
 
 def generations(data):
     if 'conv_gen' in data['extra']:
@@ -76,27 +76,26 @@ def generations(data):
     else:
         return 0.0
 
-def parse_result(fname, algo):
+def parse_result(fname):
 
     with open(fname, 'r') as f:
         data = json.load(f)
-        if not valid_solution(data):
-            return None
-        j = jain(data)
-        (r, s) = resp(data)
-        h = nhop(data)
-        gt = gatime(data)
-        gen = generations(data)
 
-        return {
-                'jain': j,
-                'tresp_avg': r,
-                'tresp_std': s,
-                'nhop': h,
-                'deltatime': gt,
-                'convgen': gen,
-                }     
+        if valid_solution(data):
+            j = jain(data)
+            (r, s) = resp(data)
+            h = nhop(data)
+            gt = gatime(data)
+            gen = generations(data)
 
+            return {
+                    'jain': j,
+                    'tresp_avg': r,
+                    'tresp_std': s,
+                    'nhop': h,
+                    'deltatime': gt,
+                    'convgen': gen,
+                    }     
 
 def collect_results(res):
     rv = {}
@@ -108,7 +107,6 @@ def collect_results(res):
             rv[k] = np.mean(samples)
             rv['sigma_%s' % k] = np.std(samples)
     return rv
-
 
 def dump_result(res, fname):
     with open(fname, 'w') as f:
@@ -128,13 +126,13 @@ def dump_result(res, fname):
                     s = '%s0\t' % (s)
             f.write(s + '\n')
 
-
 def run_experiment(par, values, nrun, config, mult, outfile):
     config['nchain'] = int(config['nchain_fog'] * config['nfog'])
     orig_param = config[par]
+    
     for algo in available_algorithms:
         print(f'\n{algo.name}')
-        result = []
+        result  = []
         for val in values:
             res = []
             print("Experiment: %s=%.1f\t" % (par, val), end="", flush=True)
@@ -149,11 +147,11 @@ def run_experiment(par, values, nrun, config, mult, outfile):
                     print("K", end="", flush=True)
                 else:
                     print("R", end="", flush=True)
-                    p = get_problem(config)
+                    p   = get_problem(config)
                     sol = solve_problem(p, algo)
                     send_response(sol)
                 # parse results
-                r = parse_result(fname, algo)
+                r = parse_result(fname)
                 if r is not None:
                     res.append(r)
                     print("+", end="", flush=True)
@@ -162,8 +160,8 @@ def run_experiment(par, values, nrun, config, mult, outfile):
             # newline
             print("")
             # compute average over multiple runs
-            cr = collect_results(res)
-            cr = {par: val} | cr
+            cr  = collect_results(res)
+            cr  = {par: val} | cr
             result.append(cr)
         dump_result(result, outfile+f'{algo.name}.data')
     config[par] = orig_param
@@ -183,7 +181,7 @@ config = {
     'tchain': 10.0,
     'rho': 0.3,
     'enable_network': True,
-    # delta_tchain = network/tchain
+    'delta_tchain': 0.1,
     'response': "file://sample_output.json",
     }
 
