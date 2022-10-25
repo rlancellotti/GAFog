@@ -2,22 +2,21 @@ import argparse
 from pygnuplot import gnuplot
 
 
-
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help="input file. Default sens_nsrv_chainGA.data")
     args   = parser.parse_args()
-    # A data file can be specified or it is opened the default
+    # A data file can be specified or the default is opened 
     fname  = 'sample/' + (args.file or "sens_nsrv_chainGA.data")
     
     with open(fname) as f:
-        g, f = gnuplot.Gnuplot(output='"g.png"', term='pngcairo'), gnuplot.Gnuplot(output='"f.png"', term='pngcairo')
+        g, f = gnuplot.Gnuplot(output=f'\"{fname}.png\"', term='pngcairo'), gnuplot.Gnuplot()
         
         # If the file has the data about the experiments on rho
         if 'rho' in fname:
             g.cmd(  'set key bottom right',
-                    'set xlabel "rho"',
+                    'set xlabel "{/Symbol r}"',
                     'set ylabel "Jain index"',
                     'set ytics nomirror',
                     'set y2label "# of hops"',
@@ -27,7 +26,7 @@ if __name__ == "__main__":
             f.unset('y2label', 'y2tics')
             f.cmd(  'set ytics mirror',
                     'set key top left',
-                    'set xlabel "rho"',
+                    'set xlabel "{/Symbol r}"',
                     'set ylabel "Response time [ms]"')
             f.plot(f'[][0:] \"{fname}\" u ($1):($4-$6-$7):($4+$6+$7) notitle w filledcurve fillstyle solid 0.2 noborder linecolor 1, \"{fname}\" u ($1):($4-$6):($4+$6) t "Std. deviation" w filledcurve fillstyle solid 0.4 noborder linecolor 1, \"{fname}\" u ($1):($4) t "Avg response time" w lp lc 1 pt 4, \"{fname}\" u ($1):($4):($5) notitle w errorbars lc 1 pt 4')
 
