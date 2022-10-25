@@ -26,17 +26,17 @@ class SolutionMbfd(Solution):
         self.compute_solution()  # Elaborates the optimal solution
 
     def get_initial_fog_idx(self):
-            """ 
-                Returns a dictonary with key=fog node not sorted and with value= position/index of the fog. 
-                Used to search the standard mapping list.
-            """
+        """ 
+            Returns a dictonary with key=fog node not sorted and with value= position/index of the fog. 
+            Used to search the standard mapping list.
+        """
 
-            rv = {}
-            i = 0
-            for f in self.problem.fog.keys():
-                rv[f] = i
-                i += 1
-            return rv
+        rv = {}
+        i = 0
+        for f in self.problem.fog.keys():
+            rv[f] = i
+            i += 1
+        return rv
       
     def get_std_map(self):
         """ 
@@ -56,17 +56,17 @@ class SolutionMbfd(Solution):
         return l
 
     def sort_fog(self):
-        """It sorts fog nodes by capacity and initialize the status params."""
+        """ It sorts fog nodes by capacity and initialize the status params. """
 
         return list(dict(sorted(self.problem.fog.items(), key=lambda x: x[1]['capacity'], reverse=True)).keys())
 
     def sort_ms(self):
-        """It sorts microservices by Sm and returns a list."""
+        """ It sorts microservices by Sm and returns a list. """
         
         return list(dict(sorted(self.problem.microservice.items(), key=lambda m: m[1]['meanserv'], reverse=True)).keys())
 
     def get_ms_from_chain(self, msname: string):
-        """Returns the name of the service chain where is used the microservice msname."""
+        """ Returns the name of the service chain where is used the microservice msname. """
 
         for k, v in self.problem.servicechain.items():
             if msname in v['services']:  
@@ -75,7 +75,7 @@ class SolutionMbfd(Solution):
         return None
 
     def compute_solution(self):
-        """Computes the solution of the problem, based on the euristic algorithm of the modified best fit decreasing."""
+        """ Computes the solution of the problem, based on the euristic algorithm of the modified best fit decreasing. """
 
         self.problem.begin_solution()
 
@@ -112,7 +112,7 @@ class SolutionMbfd(Solution):
 
         self.compute_fog_status()
         self.resptimes = self.compute_performance()   
-        self.set_extra_param('deltatime', self.problem.end_solution())
+        self.register_execution_time(self.problem.end_solution())
 
     def compare(self):
         """
@@ -138,7 +138,7 @@ if __name__ == "__main__":
 
     problem = Problem(data)
     sol = SolutionMbfd(problem)
-    sol.compare()
+    #sol.compare()
 
     fname = "sample/" + (args.output or "output.json")
     with open(fname, "w") as f:

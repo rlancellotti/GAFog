@@ -6,32 +6,37 @@ from ..fog_problem.problem import Problem
 
 
 class Solution:
+    
     def __init__(self, individual, problem):
-        self.problem = problem
-        self.nf = problem.get_nfog()
+        self.problem  = problem
+        self.nf       = problem.get_nfog()
         self.fognames = problem.get_fog_list()
-        self.nsrv = problem.get_nservice()
-        self.service = problem.get_microservice_list()
+        self.nsrv     = problem.get_nservice()
+        self.service  = problem.get_microservice_list()
         self.serviceidx = self.get_service_idx()
-        self.mapping = individual
-        self.fog = [None] * self.nf
+        self.mapping    = individual
+        self.fog        = [None] * self.nf
         self.compute_fog_status()
-        self.resptimes = None
+        self.resptimes  = None
         self.queueingtimes = None
-        self.waitingtimes = None
-        self.servicetimes = None
-        self.deltatime = None
-        self.extra_param = {}
+        self.waitingtimes  = None
+        self.servicetimes  = None
+        self.deltatime     = None   # Used to store the execution time of the algorithm
+        self.extra_param   = {}
 
     def register_execution_time(self, deltatime=None):
+        """ Saves the execution time. If it isn't passed it find it in the problem params. """
+
         if deltatime:
             self.set_extra_param('deltatime', deltatime)
         else:
             self.set_extra_param('deltatime', self.problem.get_solution_time())
 
     def get_service_idx(self):
+        """ Returns a mapped dict where the key is the name of the service and the value is an index. """
+
         rv = {}
-        i = 0
+        i  = 0
         for s in self.service:
             rv[s] = i
             i += 1
@@ -41,6 +46,8 @@ class Solution:
         return str(self.mapping)
 
     def get_service_list(self, fidx):
+        """ Returns a list of all the microservices allocated in the fog node of the given index. """
+
         rv = []
         for s in range(self.nsrv):
             if self.mapping[s] == fidx:
@@ -48,25 +55,33 @@ class Solution:
         return rv
 
     def set_extra_param(self, param, value):
+        """ Sets a new param in an object Solution. """
+
         self.extra_param[param] = value
 
     def get_extra_param(self, param):
+        """ Get the value of the given param if it exist. """
+
         if param in self.extra_param.keys():
             return self.extra_param[param]
-        else:
-            return None
 
     def compute_fog_status(self):
+        """ 
+            Computes the status of all the fog nodes for a certain microservices' mapping. 
+            It calculates tserv, stddev, lambda, cv, mu, rho, twait and tresp.  
+            All this params are then used to compare if the solution is feasible or not.  
+        """
+
         # for each fog node
         for fidx in range(self.nf):
             # get list of services for that node
             serv = self.get_service_list(fidx)
-            f = self.problem.get_fog(self.fognames[fidx])
+            f    = self.problem.get_fog(self.fognames[fidx])
             # compute average service time for that node
             # compute stddev for that node
             # compute output inter-leaving time and stddev
             tserv = 0.0
-            std = 0.0
+            std   = 0.0
             lam_tot = 0.0
             for s in serv:
                 # get service data
@@ -86,7 +101,7 @@ class Solution:
                 # compute mu and Cov for node
                 cv = std / tserv
                 mu = 1.0 / tserv
-                rho = lam_tot / mu
+                rho   = lam_tot / mu
                 twait = self.mg1_waittime(lam_tot, mu, cv)
                 # print(self.fognames[fidx], tserv, std, rho, twait)
             else:
@@ -124,6 +139,11 @@ class Solution:
             return self.overload_waittime(mu, rho)
 
     def mg1_waittime(self, lam, mu, cv):
+        """ 
+            Calculates and returns the result of the Pollaczek-Khinchin formula.
+            Used to find tresp.
+        """
+
         if mu == 0:
             return 0
         # M/G/1 Pollaczek-Khinchin formula
@@ -148,19 +168,25 @@ class Solution:
         return rv
 
     def compute_performance(self):
+        """ 
+            Computes the performance of all the servicechains.
+            It calculates resptime, waittime, servicetime and networktime.
+            Returns the dict of all this params with the key that is service's name.
+        """
+
         rv = {}
         # for each service chain
         for sc in self.problem.get_servicechain_list():
             prevfog = None
             tr = 0.0
             twait = 0.0
-            tnet = 0.0
-            tsrv = 0.0
+            tnet  = 0.0
+            tsrv  = 0.0
             # for each service
             for s in self.problem.get_microservice_list(sc=sc):
                 if self.mapping[self.serviceidx[s]] is not None:
                     # get fog node id from service name
-                    fidx = self.mapping[self.serviceidx[s]]
+                    fidx  = self.mapping[self.serviceidx[s]]
                     fname = self.fognames[fidx]
                     # add tresp for node where the service is located
                     tr += self.fog[fidx]['twait']
@@ -168,7 +194,7 @@ class Solution:
                     twait += self.fog[fidx]['twait']
                     # add tnet for every node (except first)
                     if prevfog is not None:
-                        tr += self.problem.get_delay(prevfog, fname)['delay']
+                        tr   += self.problem.get_delay(prevfog, fname)['delay']
                         tnet += self.problem.get_delay(prevfog, fname)['delay']
                     prevfog = fname
                 else:
@@ -183,6 +209,11 @@ class Solution:
         return rv
 
     def obj_func(self):
+        """ 
+            Calculates the objective function.
+            Is the sum of resptime * weight for all the servicechains. 
+        """
+
         tr_tot = 0.0
         if not self.resptimes:
             self.resptimes = self.compute_performance()
@@ -191,30 +222,35 @@ class Solution:
         return tr_tot
 
     def dump_solution(self):
+        """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """
         # print('dumping solution')
 
         self.set_extra_param('obj_func', self.obj_func())
-
         rv = {'servicechain': self.resptimes, 'microservice': {}, 'sensor': {}, 'fog':{}}
+
         # add services in each service chain
         for sc in self.problem.get_servicechain_list():
             rv['servicechain'][sc]['services'] = {}
-            rv['servicechain'][sc]['sensors'] = []
+            rv['servicechain'][sc]['sensors']  = []
             for ms in self.problem.get_microservice_list(sc=sc):
                 rv['servicechain'][sc]['services'][ms] = self.problem.get_microservice(ms)
             src = {'startTime': 0, 'stopTime': -1, 'lambda': self.problem.servicechain[sc]['lambda']}
             rv['servicechain'][sc]['sources'] = [src]
+
         # add sensors connected to each service chain
         for s in self.problem.get_sensor_list():
             sc = self.problem.get_chain_for_sensor(s)
             rv['servicechain'][sc]['sensors'].append(s)
+
         for msidx in range(self.nsrv):
             if self.mapping[msidx] is not None:
                 rv['microservice'][self.service[msidx]] = self.fognames[self.mapping[msidx]]
+                
         for s in self.problem.sensor:
             msidx = self.serviceidx[self.problem.get_service_for_sensor(s)]
             if self.mapping[msidx] is not None:
                 rv['sensor'][s] = self.fognames[self.mapping[msidx]]
+
         for f in self.fog:
             rv['fog'][f['name']] = {
                 'rho': f['rho'], 
@@ -226,6 +262,7 @@ class Solution:
                 'lambda': f['lambda'],
                 'twait': f['twait'],
             }
+       
         rv['extra'] = self.extra_param
         if not self.problem.network_is_fake:
             rv['network'] = self.problem.network_as_matrix()
@@ -233,6 +270,11 @@ class Solution:
         return rv
 
     def fog_from_name(self, fname):
+        """ 
+            From a given fog node's name it returns the status.
+            It calcutes the status' fog if was not.
+        """
+
         if not self.resptimes:
             self.obj_func()
         for f in self.fog:
@@ -240,11 +282,18 @@ class Solution:
                 return f
 
     def get_fog_param(self, fname, par):
+        """ From a given fog name and a param it returns the value. """
+
         f = self.fog_from_name(fname)
         if f and par in f.keys():
             return f[par]
 
     def get_chain_param(self, scname, par):
+        """  
+            From a given servicechain's name it returns the performance.
+            It calcutes the performance' servicechain if was not.
+        """
+        
         if not self.resptimes:
             self.obj_func()
         if scname in self.resptimes.keys() and par in self.resptimes[scname].keys():
