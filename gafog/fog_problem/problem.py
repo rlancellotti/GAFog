@@ -139,8 +139,13 @@ class Problem:
                     lam += self.sensor[s]['lambda']
             self.servicechain[sc]['lambda'] = lam
             # intialize also lambda for each microservice
+            # lambda_i=lambda_i-1*(1-p_exit_i-1)
+            lam_i=lam
+            pexit=0.0
             for s in self.servicechain[sc]['services']:
-                self.microservice[s]['lambda'] = lam
+                self.microservice[s]['lambda'] = lam_i
+                lam_i=lam_i*(1-pexit)
+                pexit=self.microservice[s]['exitprobability'] if 'exitprobability' in self.microservice[s].keys() else 0.0
             # initilize weight of service chain if missing
             if 'weight' not in self.servicechain[sc]:
                 self.servicechain[sc]['weight'] = lam
@@ -221,8 +226,7 @@ class Problem:
             return self.solution_time
         except AttributeError:
             return -1.0
-
-
+    
 if __name__ == '__main__':
     with open('sample/sample_input.json') as f:
         data = json.load(f)
