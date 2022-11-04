@@ -9,7 +9,6 @@ import os
 ENGINE='dot'
 #ENGINE='neato'
 
-
 def get_filename(ftemplate):
     return ftemplate.replace('.mako', '')
 
@@ -40,4 +39,4 @@ if __name__ == '__main__':
     else:
         outtype = pathlib.Path(fout).suffix.strip('.')
         with open(fout, 'wb') as f:
-            f.write(render_image(out, outtype))        
+            f.write(render_image(out, outtype))
