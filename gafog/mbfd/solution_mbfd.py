@@ -22,7 +22,6 @@ class SolutionMbfd(Solution):
 
         super().__init__(individual, problem)
 
-        self.fognames = self.sort_fog()  # A name's list of the fog sorted in decreasing order by capacity
         self.compute_solution()  # Elaborates the optimal solution
 
     def get_initial_fog_idx(self):
@@ -43,6 +42,8 @@ class SolutionMbfd(Solution):
             This function returns a list of the changed mapping.
             This should be used to pass between different algorithms' resolution because it normalizes the mapping solution
             if the fog nodes' order change.
+            This was used for a legacy version of the compute_solution function that it was reordering the list of 
+            microservices and so was changing the mapping list too. 
         """
        
         ini = self.get_initial_fog_idx()
@@ -84,8 +85,6 @@ class SolutionMbfd(Solution):
 
             # If the map for the ms is already choose
             if self.mapping[self.serviceidx[ms]] is not None:
-                # Maps the idx of THIS algorithm (fog changed)
-                self.mapping[self.serviceidx[ms]] = self.get_initial_fog_idx()[self.fognames[self.mapping[self.serviceidx[ms]]]]
                 continue
 
             prev = {'fidx': 0, 'fun': None}
@@ -137,8 +136,8 @@ if __name__ == "__main__":
         data = json.load(f)
 
     problem = Problem(data)
-    sol = SolutionMbfd(problem)
-    #sol.compare()
+    sol = SolutionMbfd(problem )
+    sol.compare()
 
     fname = "sample/" + (args.output or "output.json")
     with open(fname, "w") as f:
