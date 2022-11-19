@@ -11,6 +11,9 @@ if __name__ == "__main__":
     fname  = 'sample/' + (args.file or "sens_nsrv_chainGA.data")
     
     with open(fname) as g:
+
+        #TODO: implement the comparison between the 3 algorithm (?)
+
         g = gnuplot.Gnuplot(output=f'\"{fname.replace(".data","")}-1.png\"', term='pngcairo font "helvetica,12"')
         
         # If the file has the data about the experiments on rho

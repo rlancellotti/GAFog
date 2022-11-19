@@ -140,12 +140,12 @@ class Problem:
             self.servicechain[sc]['lambda'] = lam
             # intialize also lambda for each microservice
             # lambda_i=lambda_i-1*(1-p_exit_i-1)
-            lam_i=lam
-            pexit=0.0
+            lam_i = lam
+            pexit = 0.0
             for s in self.servicechain[sc]['services']:
                 self.microservice[s]['lambda'] = lam_i
-                lam_i=lam_i*(1-pexit)
-                pexit=self.microservice[s]['exitprobability'] if 'exitprobability' in self.microservice[s].keys() else 0.0
+                lam_i = lam_i*(1-pexit)
+                pexit = self.microservice[s]['exitprobability'] if 'exitprobability' in self.microservice[s].keys() else 0.0
             # initilize weight of service chain if missing
             if 'weight' not in self.servicechain[sc]:
                 self.servicechain[sc]['weight'] = lam
