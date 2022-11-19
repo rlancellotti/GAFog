@@ -17,6 +17,7 @@ data.*
 *.pyd
 *.json
 *.
+*.code-workspace
 **/osmarender/**
 fog*.ned
 !sample_input*.json
