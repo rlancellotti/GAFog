@@ -67,7 +67,7 @@ class SolutionMbfd(Solution):
         return list(dict(sorted(self.problem.microservice.items(), key=lambda m: m[1]['meanserv'], reverse=True)).keys())
 
     def get_ms_from_chain(self, msname: string):
-        """ Returns the name of the service chain where is used the microservice msname. """
+        """ Returns the name of the service chain where the microservice msname is used. """
 
         for k, v in self.problem.servicechain.items():
             if msname in v['services']:  
