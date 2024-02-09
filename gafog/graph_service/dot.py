@@ -21,7 +21,6 @@ def render_image(dotcode, outtype='svg'):
     p = subprocess.run([ENGINE, '-T%s'%outtype], input=bytearray(dotcode.encode()), capture_output=True)
     return p.stdout
 
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', help='output file. Default graph.svg')

@@ -76,7 +76,7 @@ class SolutionMbfd(Solution):
         return None
 
     def compute_solution(self):
-        """ Computes the solution of the problem, based on the euristic algorithm of the modified best fit decreasing. """
+        """ Computes the solution of the problem, based on the heuristic algorithm of the modified best fit decreasing. """
 
         self.problem.begin_solution()
 

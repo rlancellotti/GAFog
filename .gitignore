@@ -2,6 +2,7 @@
 **/.vscode/
 .venv/
 venv/
+env/
 ga.code-workspace
 data.*
 *.data
@@ -21,3 +22,5 @@ data.*
 **/osmarender/**
 fog*.ned
 !sample_input*.json
+run_optimize.sh
+time.txt
