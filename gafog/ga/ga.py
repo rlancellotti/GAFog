@@ -14,33 +14,27 @@ numGen = 600    # number fo generations used in the GA
 numPop = 600    # initial number of individuals at gen0
 #numGen = 60    # number fo generations used in the GA
 #numPop = 60    # initial number of individuals at gen0
-problem = None
+#problem = None
 
-def obj_func(individual1):
-    # FIXME: should remove this global dependency!
-    global problem
+def obj_func(individual1, problem: Problem):
     ind = FogIndividual(individual1, problem)
     return ind.obj_func(),
 
-def load_individuals(creator, problem:Problem):
+def load_individuals(creator, problem: Problem):
     individual = list()
     for i in range(problem.get_nservice()):
         individual.append(random.randint(0, problem.get_nfog() - 1))
     return creator(individual)
 
 
-def mut_uniform_fog(individual, indpb):
-    # FIXME: should remove this global dependency!
-    global problem
+def mut_uniform_fog(individual, indpb, problem: Problem):
     for i in range(len(individual)):
         if random.random() < indpb:
             individual[i] = random.randint(0, problem.get_nfog() - 1)
     return (individual,)
 
 
-def cx_uniform_fog(ind1, ind2, indpb):
-    # FIXME: should remove this global dependency!
-    global problem
+def cx_uniform_fog(ind1, ind2, indpb, problem: Problem):
     size = min(len(ind1), len(ind2))
     for i in range(size):
         if random.random() < indpb:
@@ -61,9 +55,9 @@ def init_ga(problem):
     toolbox.register("individual", load_individuals, creator.Individual, problem)
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
-    toolbox.register("evaluate", obj_func)
-    toolbox.register("mate", cx_uniform_fog, indpb=0.5)
-    toolbox.register("mutate", mut_uniform_fog, indpb=0.05)
+    toolbox.register("evaluate", obj_func, problem=problem)
+    toolbox.register("mate", cx_uniform_fog, indpb=0.5, problem=problem)
+    toolbox.register("mutate", mut_uniform_fog, indpb=0.05, problem=problem)
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
@@ -117,12 +111,20 @@ def dump_solution(gaout, sol):
         json.dump(sol.dump_solution(), f, indent=2)
 
 
-def solve_problem(prob):
-    # FIXME: should remove this global dependency!
-    global problem
+def solve_problem(problem):
     cxbp = 0.5
     mutpb = 0.3
-    problem = prob
+    problem.begin_solution()
+    toolbox = init_ga(problem)
+    sol = solve_ga_simple(toolbox, cxbp, mutpb, problem)
+    problem.end_solution()
+    sol.register_execution_time()
+    return sol
+
+
+def solve_problem_pwr(problem):
+    cxbp = 0.5
+    mutpb = 0.3
     problem.begin_solution()
     toolbox = init_ga(problem)
     sol = solve_ga_simple(toolbox, cxbp, mutpb, problem)
@@ -140,7 +142,8 @@ if __name__ == "__main__":
     fname = args.file or "sample/sample_input2.json"
     with open(fname) as f:
         data = json.load(f)
-    sol = solve_problem(Problem(data))
+    problem=Problem(data)
+    sol = solve_problem(problem)
     print(sol)
 
     fname = "sample/" + (args.output or "sample_output2.json")

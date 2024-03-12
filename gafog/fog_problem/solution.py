@@ -6,7 +6,7 @@ from ..fog_problem.problem import Problem
 
 
 class Solution:
-    
+  
     def __init__(self, individual, problem):
         self.problem  = problem
         self.nf       = problem.get_nfog()
@@ -35,12 +35,7 @@ class Solution:
     def get_service_idx(self):
         """ Returns a mapped dict where the key is the name of the service and the value is an index. """
 
-        rv = {}
-        i  = 0
-        for s in self.service:
-            rv[s] = i
-            i += 1
-        return rv
+        return {s : n for (n, s) in enumerate(self.service)}
 
     def __str__(self):
         return str(self.mapping)
@@ -48,11 +43,7 @@ class Solution:
     def get_service_list(self, fidx):
         """ Returns a list of all the microservices allocated in the fog node of the given index. """
 
-        rv = []
-        for s in range(self.nsrv):
-            if self.mapping[s] == fidx:
-                rv.append(self.service[s])
-        return rv
+        return [self.service[s] for (n, s) in enumerate(self.mapping) if s==fidx]
 
     def set_extra_param(self, param, value):
         """ Sets a new param in an object Solution. """
@@ -65,65 +56,83 @@ class Solution:
         if param in self.extra_param.keys():
             return self.extra_param[param]
 
+    def compute_fog_performance(self, fidx):
+        """ 
+            Computes the status of a dingle fog node. 
+            It calculates tserv, stddev, lambda, cv, mu, rho, twait and tresp.  
+            All this params are then used to check if the solution is feasible or not.  
+        """
+        #print(f'copmute_fog_performance {fidx}')
+        if self.fog[fidx] is not None and 'rho' in self.fog[fidx].keys():
+            return
+        #print(self.mapping)
+        # get list of services for that node
+        serv = self.get_service_list(fidx)
+        f    = self.problem.get_fog(self.fognames[fidx])
+        # compute average service time for that node
+        # compute stddev for that node
+        # compute output inter-leaving time and stddev
+        tserv = 0.0
+        std   = 0.0
+        lam_tot = 0.0
+        #print(serv)
+        for s in serv:
+            # get service data
+            ms = self.problem.get_microservice(s)
+            #print(s, ms)
+            # compute weights: w_i=lam_i/lam_tot
+            # compute average service time: tserv=sum_i(w_i * tserv_i)
+            tserv += ms['lambda'] * ms['meanserv']
+            # compute stddev: std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
+            std += ms['lambda'] * (ms['stddevserv']**2 + ms['meanserv']**2)
+            lam_tot += ms['lambda']
+        if lam_tot != 0:
+            tserv = tserv / lam_tot
+            std = sqrt((std/lam_tot) - (tserv**2))
+            tserv = tserv / f['capacity']
+            std = std / f['capacity']
+            # compute mu and Cov for node
+            cv = std / tserv
+            mu = 1.0 / tserv
+            rho   = lam_tot / mu
+            twait = self.mg1_waittime(lam_tot, mu, cv)
+            # print(self.fognames[fidx], tserv, std, rho, twait)
+        else:
+            tserv = 0
+            std = 0
+            mu = 0
+            cv = 0
+            rho = 0
+            twait = 0
+        self.fog[fidx] = {
+            'capacity': f['capacity'],
+            'name': self.fognames[fidx],
+            'tserv': tserv, 
+            'stddev': std, 
+            'mu': mu, 
+            'cv': cv,
+            'lambda': lam_tot,
+            'twait': twait,
+            'tresp': twait + tserv,
+            'rho': rho
+        }
+        # print(self.fog[fidx])
+
     def compute_fog_status(self):
         """ 
             Computes the status of all the fog nodes for a certain microservices' mapping. 
-            It calculates tserv, stddev, lambda, cv, mu, rho, twait and tresp.  
-            All this params are then used to compare if the solution is feasible or not.  
         """
 
         # for each fog node
         for fidx in range(self.nf):
-            # get list of services for that node
-            serv = self.get_service_list(fidx)
-            f    = self.problem.get_fog(self.fognames[fidx])
-            # compute average service time for that node
-            # compute stddev for that node
-            # compute output inter-leaving time and stddev
-            tserv = 0.0
-            std   = 0.0
-            lam_tot = 0.0
-            for s in serv:
-                # get service data
-                ms = self.problem.get_microservice(s)
-                # print(ms)
-                # compute weights: w_i=lam_i/lam_tot
-                # compute average service time: tserv=sum_i(w_i * tserv_i)
-                tserv += ms['lambda'] * ms['meanserv']
-                # compute stddev: std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
-                std += ms['lambda'] * (ms['stddevserv']**2 + ms['meanserv']**2)
-                lam_tot += ms['lambda']
-            if lam_tot != 0:
-                tserv = tserv / lam_tot
-                std = sqrt((std/lam_tot) - (tserv**2))
-                tserv = tserv / f['capacity']
-                std = std / f['capacity']
-                # compute mu and Cov for node
-                cv = std / tserv
-                mu = 1.0 / tserv
-                rho   = lam_tot / mu
-                twait = self.mg1_waittime(lam_tot, mu, cv)
-                # print(self.fognames[fidx], tserv, std, rho, twait)
-            else:
-                tserv = 0
-                std = 0
-                mu = 0
-                cv = 0
-                rho = 0
-                twait = 0
-            self.fog[fidx] = {
-                'capacity': f['capacity'],
-                'name': self.fognames[fidx],
-                'tserv': tserv, 
-                'stddev': std, 
-                'mu': mu, 
-                'cv': cv,
-                'lambda': lam_tot,
-                'twait': twait,
-                'tresp': twait + tserv,
-                'rho': rho
-            }
-            # print(self.fog[fidx])
+            self.compute_fog_performance(fidx)
+
+    def is_rho_overload(self, rho):
+        return rho>=1
+
+    def is_node_overload(self, fidx):
+        self.compute_fog_performance(fidx)
+        return self.fog[fidx]['rho'] >= 1.0
 
     def overload_waittime(self, mu, rho):
         # if overloaded, the penalty is proportional to rho
@@ -133,7 +142,7 @@ class Solution:
     def mm1_waittime(self, lam, mu):
         # classical M/M/1 formula
         rho = lam / mu
-        if mu > lam:
+        if self.is_rho_overload(rho):
             return rho / (1 - rho)
         else:
             return self.overload_waittime(mu, rho)
@@ -148,7 +157,7 @@ class Solution:
             return 0
         # M/G/1 Pollaczek-Khinchin formula
         rho = lam / mu
-        if mu > lam:
+        if self.is_rho_overload(rho):
             rv = (1.0 / mu) * ((1.0 + cv**2) / 2.0) * (rho / (1.0 - rho))
             # print(f'M/G/1(tserv={1.0/mu}, cv={cv}, rho={rho})={rv}')
         else:
@@ -178,7 +187,6 @@ class Solution:
         # for each service chain
         for sc in self.problem.get_servicechain_list():
             prevfog = None
-            tr = 0.0
             twait = 0.0
             tnet  = 0.0
             tsrv  = 0.0
@@ -189,19 +197,16 @@ class Solution:
                     fidx  = self.mapping[self.serviceidx[s]]
                     fname = self.fognames[fidx]
                     # add tresp for node where the service is located
-                    tr += self.fog[fidx]['twait']
                     tsrv += self.problem.get_microservice(s)['meanserv'] / self.fog[fidx]['capacity']
                     twait += self.fog[fidx]['twait']
                     # add tnet for every node (except first)
                     if prevfog is not None:
-                        tr   += self.problem.get_delay(prevfog, fname)['delay']
                         tnet += self.problem.get_delay(prevfog, fname)['delay']
                     prevfog = fname
                 else:
                     prevfog = None
             rv[sc] = {
                 'resptime': twait + tsrv + tnet,
-                'resptime_old': tr,
                 'waittime': twait,
                 'servicetime': tsrv,
                 'networktime': tnet,

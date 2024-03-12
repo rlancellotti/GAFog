@@ -228,7 +228,7 @@ class Problem:
             return -1.0
     
 if __name__ == '__main__':
-    with open('sample/sample_input.json') as f:
+    with open('sample/sample_input2.json') as f:
         data = json.load(f)
     
     p = Problem(data)
