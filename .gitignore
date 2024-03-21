@@ -1,5 +1,5 @@
-*__pycache__/
-**/.vscode/
+__pycache__/
+.vscode/
 .venv/
 venv/
 env/
@@ -17,10 +17,11 @@ data.*
 *.pyc
 *.pyd
 *.json
-*.
 *.code-workspace
 **/osmarender/**
 fog*.ned
 !sample_input*.json
 run_optimize.sh
 time.txt
+results/*
+run_paper.sh
