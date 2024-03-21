@@ -8,23 +8,18 @@ from ..fog_problem.solution import Solution
 
 class SolutionPwr(Solution):
   
-    def __init__(self, individual, problem):
+    def __init__(self, chromosome, problem):
         # Structure of an individual:
-        # 1) first nservices genes contains mapping of services over fog nodes
-        #    fog nodes are in range 1..nfog_on
-        # 2) nfog_on genes map the "on" fog nodes over the actual fog nodes.
-        #    mapping elements are in range 1..nfog.
-        #    each fog node can appear only once
-        # super().__init__(self, individual, problem)
+        # 
         self.problem  = problem
         self.nf       = problem.get_nfog()
         self.fognames = problem.get_fog_list()
         self.nsrv     = problem.get_nservice()
-        self.nfogon      = len(individual) - self.nsrv
+        self.nfogon   = len(chromosome) - self.nsrv
         self.service  = problem.get_microservice_list()
         self.serviceidx = self.get_service_idx()
         #print(individual, self.indirect_service_mapping, self.indirect_fog_mapping)
-        self.mapping    = self.get_mapping(individual)
+        self.mapping    = self.get_mapping(chromosome)
         #print(self.mapping)
         self.fog        = [None] * self.nf
         self.compute_fog_status()
@@ -37,7 +32,6 @@ class SolutionPwr(Solution):
 
     def get_mapping(self, individual):
         """ Returns the actual microservice mapping considering self.indirect_fog_mapping as a translation """
-
         mapping=[None] * self.nsrv
         current_fog=0
         for i in individual:
@@ -54,7 +48,6 @@ class SolutionPwr(Solution):
         #    print(f'problem will arise! services on {max(indirect_service_mapping)+1} fogs, but only {self.nfogon} on')
         #return [indirect_fog_mapping[i] for i in indirect_service_mapping]       
 
-
     def compute_fog_power(self, fidx):
         """
             Compute the power consumption of the fog (i.e. its status on or off)
@@ -68,8 +61,6 @@ class SolutionPwr(Solution):
         else:
             self.fog[fidx]['power']=1
         
-        
-
     def compute_fog_status(self):
         """ 
             Computes the status of all the fog nodes for a certain microservices' mapping. 

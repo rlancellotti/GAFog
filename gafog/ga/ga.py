@@ -7,8 +7,8 @@ import argparse
 from collections import namedtuple
 from deap import base, creator, tools, algorithms
 
-from ..fog_problem.problem import Problem
-from .fogindividual import FogIndividual
+from ..fog_problem.problem import Problem, load_problem
+from ..fog_problem.solution import Solution
 
 numGen = 600    # number fo generations used in the GA
 numPop = 600    # initial number of individuals at gen0
@@ -16,16 +16,15 @@ numPop = 600    # initial number of individuals at gen0
 #numPop = 60    # initial number of individuals at gen0
 #problem = None
 
-def obj_func(individual1, problem: Problem):
-    ind = FogIndividual(individual1, problem)
-    return ind.obj_func(),
+def obj_func(individual, problem: Problem):
+    sol = problem.get_solution(individual)
+    return sol.obj_func(),
 
 def load_individuals(creator, problem: Problem):
     individual = list()
     for i in range(problem.get_nservice()):
         individual.append(random.randint(0, problem.get_nfog() - 1))
     return creator(individual)
-
 
 def mut_uniform_fog(individual, indpb, problem: Problem):
     for i in range(len(individual)):
@@ -94,9 +93,9 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem:Problem):
     # Change verbose parameter to see population evolution
     pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
                                     stats=stats, halloffame=hof, verbose=False)
-    best = FogIndividual(hof[0], problem)
+    best = problem.get_solution(hof[0])
     convergence = get_convergence(log, best.obj_func())
-    best.set_convergence_gen(convergence)
+    best.set_extra_param('conv_gen', convergence)
     best.set_extra_param('max_gen', numGen)
     best.set_extra_param('population', numPop)
     # gen=log.select("gen")
@@ -122,17 +121,6 @@ def solve_problem(problem):
     return sol
 
 
-def solve_problem_pwr(problem):
-    cxbp = 0.5
-    mutpb = 0.3
-    problem.begin_solution()
-    toolbox = init_ga(problem)
-    sol = solve_ga_simple(toolbox, cxbp, mutpb, problem)
-    problem.end_solution()
-    sol.register_execution_time()
-    return sol
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
@@ -142,7 +130,8 @@ if __name__ == "__main__":
     fname = args.file or "sample/sample_input2.json"
     with open(fname) as f:
         data = json.load(f)
-    problem=Problem(data)
+    # FIXME: use problem loader
+    problem=load_problem(data)
     sol = solve_problem(problem)
     print(sol)
 

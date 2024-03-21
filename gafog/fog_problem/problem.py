@@ -1,48 +1,57 @@
 import json
 import time
 
-class Problem:
-    
-    def __init__(self, problem):
-        self.response = problem['response'] if 'response' in problem.keys() else None
-        self.fog = problem['fog']
-        self.sensor = problem['sensor']
-        self.servicechain = problem['servicechain']
-        self.microservice = problem['microservice']
+#from ..fog_problem.problProblem.dict()em_pwr import ProblemPwr
 
-        if 'network' in problem:
-            self.network_is_fake = False
-            self.network = problem['network']
-        else:
-            self.network_is_fake = True
-            self.network = self.fake_network(self.fog)
+def load_problem(problem_dct: dict):
+    from ..fog_problem.problem_perf import ProblemPerf
+    from ..fog_problem.problem_pwr import ProblemPwr
+    return ProblemPerf(problem_dct)
+
+class Problem:
+    def __init__(self, problem_dct: dict):
+        self.response = problem_dct['response'] if 'response' in problem_dct.keys() else None
+        self.fog = problem_dct['fog']
+        self.sensor = problem_dct['sensor']
+        self.servicechain = problem_dct['servicechain']
+        self.microservice = problem_dct['microservice']
+        self.handle_network(problem_dct)
             
         self.maxrho = 0.999
         self.compute_service_params()
         self.compute_chain_params()
 
+    def handle_network(self, problem_dct: dict):
+        if 'network' in problem_dct:
+            self.network_is_fake = False
+            self.network = problem_dct['network']
+        else:
+            self.network_is_fake = True
+            self.network = self.fake_network(self.fog)
+
     def dump_problem(self):
         """ Returns a dict of the problem's values. """
-
         rv = {
             'fog': self.fog,
             'sensor': self.sensor,
             'servicechain': self.servicechain,
             'microservice': self.microservice
             }
-            
         if not self.network_is_fake:
             rv['network'] = self.network
         if self.response is not None:
             rv['response'] = self.response
         return rv
 
+    def get_solution(self, chromosome):
+        from ..fog_problem.solution import Solution as solution_module
+        return solution_module(chromosome, self)
+
     def fake_network(self, fognodes):
         """ 
             If network is not 'enabled'/is not in the json file, it returns a fake one
             where the delay is always 0.
         """
-
         rv = {}
         for f1 in fognodes:
             for f2 in fognodes:
@@ -51,7 +60,6 @@ class Problem:
 
     def get_capacity(self, f):
         """ Returns the capacity of the given fog node. """
-
         if f in self.fog:
             return self.fog[f]['capacity']
         else:
@@ -65,12 +73,10 @@ class Problem:
             Given two nodes it 'cast' them in the right string. 
             Is used as a key to get the value of the delay between these nodes.
         """
-
         return '%s-%s'%(f1, f2)
 
     def get_delay(self, f1, f2):
         """ Returns the delay between two given nodes. """
-
         k = self.get_network_key(f1, f2)
         # search (f1, f2)
         if k in self.network:
@@ -94,35 +100,29 @@ class Problem:
 
     def compute_service_params(self):
         """ Computes rate and cv for all the microservices in the list. """
-
         for ms in self.microservice:
             self.microservice[ms]['rate'] = 1.0 / self.microservice[ms]['meanserv']
             self.microservice[ms]['cv']   = self.microservice[ms]['stddevserv'] / self.microservice[ms]['meanserv']
 
     def get_servicechain_list(self):
         """ Returns the list of the service chain's names. """
-
         return list(self.servicechain.keys())
 
     def get_fog_list(self):
         """ Returns the list of fog nodes' names. """
-
         return list(self.fog.keys())
 
     def get_sensor_list(self):
         """ Returns the list of the sensor's names. """
-
         return list(self.sensor.keys())
 
     def get_service_for_sensor(self, s):
         """ Returns the list of microservice on a certain servicechain given the name of the sensor. """
-
         sc = self.sensor[s]['servicechain']
         return self.servicechain[sc]['services'][0]
 
     def get_chain_for_sensor(self, s):
         """ Returns the name of the servicechain on a given sensor. """
-        
         return self.sensor[s]['servicechain']
 
     def compute_chain_params(self):
@@ -130,7 +130,6 @@ class Problem:
             Computes the params of all the servicechain. 
             It calculates lambda and weight.    
         """
-
         tot_weight = 0.0
         for sc in self.servicechain:
             lam = 0.0
@@ -159,7 +158,6 @@ class Problem:
             Returns the microservices' on a given servicechain.
             If none is specified it returns all the microservices. 
         """
-
         if not sc:
             return list(self.microservice.keys())
         else:
@@ -170,7 +168,6 @@ class Problem:
             Returns all the params in the dict of the given microservice. 
             If ms doesn't exists then it returns None. 
         """
-
         if ms in self.microservice:
             return self.microservice[ms]
 
@@ -179,23 +176,19 @@ class Problem:
             Returns all the params in the dict of the given fog node. 
             If f doesn't exists then it returns None. 
         """
-
         if f in self.fog:
             return self.fog[f]
 
     def get_nfog(self):
         """ Returns the number of the fog nodes. """
-
         return len(self.fog)
 
     def get_nservice(self):
         """ Returns the total number of microservices. """
-
         return len(self.microservice)
 
     def network_as_matrix(self):
         """ Returns a matrix where every f1 have a list of all the f2 is linked to. """
-
         rv = []
         for f1 in self.get_fog_list():
             l = []
@@ -209,19 +202,16 @@ class Problem:
 
     def begin_solution(self):
         """ Starts time, when a solver is 'activated'. Is used to calculate the execution time. """
-
         self.start_time = time.perf_counter_ns()
 
     def end_solution(self):
         """ Ends the time, when the solver is stopped. Is used to calculate the execution time. """
-
         self.end_time = time.perf_counter_ns()
         self.solution_time = (self.end_time - self.start_time) / 1e9
         return self.solution_time
 
     def get_solution_time(self):
         """ Returns the execution time if it was calculated. """
-        
         try:
             return self.solution_time
         except AttributeError:

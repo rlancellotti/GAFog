@@ -1,4 +1,3 @@
-from math import sqrt
 import json
 
 from ..fog_problem.problem import Problem
@@ -6,8 +5,8 @@ from ..fog_problem.solution import Solution
 
 
 class FogIndividual(Solution):
-    def __init__(self, individual, problem):
-        super().__init__(individual, problem)
+    def __init__(self, chromosome, problem: Problem):
+        super().__init__(chromosome, problem)
         self.deltatime = None
         self.conv_gen = None
 

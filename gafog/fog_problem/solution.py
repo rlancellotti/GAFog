@@ -16,17 +16,16 @@ class Solution:
         self.serviceidx = self.get_service_idx()
         self.mapping    = individual
         self.fog        = [None] * self.nf
-        self.compute_fog_status()
         self.resptimes  = None
         self.queueingtimes = None
         self.waitingtimes  = None
         self.servicetimes  = None
         self.deltatime     = None   # Used to store the execution time of the algorithm
         self.extra_param   = {}
+        self.compute_fog_status()
 
     def register_execution_time(self, deltatime=None):
         """ Saves the execution time. If it isn't passed it find it in the problem params. """
-
         if deltatime:
             self.set_extra_param('deltatime', deltatime)
         else:
@@ -34,7 +33,6 @@ class Solution:
 
     def get_service_idx(self):
         """ Returns a mapped dict where the key is the name of the service and the value is an index. """
-
         return {s : n for (n, s) in enumerate(self.service)}
 
     def __str__(self):
@@ -42,23 +40,20 @@ class Solution:
 
     def get_service_list(self, fidx):
         """ Returns a list of all the microservices allocated in the fog node of the given index. """
-
         return [self.service[s] for (n, s) in enumerate(self.mapping) if s==fidx]
 
     def set_extra_param(self, param, value):
         """ Sets a new param in an object Solution. """
-
         self.extra_param[param] = value
 
     def get_extra_param(self, param):
         """ Get the value of the given param if it exist. """
-
         if param in self.extra_param.keys():
             return self.extra_param[param]
 
     def compute_fog_performance(self, fidx):
         """ 
-            Computes the status of a dingle fog node. 
+            Computes the status of a single fog node. 
             It calculates tserv, stddev, lambda, cv, mu, rho, twait and tresp.  
             All this params are then used to check if the solution is feasible or not.  
         """
@@ -98,12 +93,7 @@ class Solution:
             twait = self.mg1_waittime(lam_tot, mu, cv)
             # print(self.fognames[fidx], tserv, std, rho, twait)
         else:
-            tserv = 0
-            std = 0
-            mu = 0
-            cv = 0
-            rho = 0
-            twait = 0
+            tserv, std, mu, cv, rho, twait = 0, 0, 0, 0, 0, 0
         self.fog[fidx] = {
             'capacity': f['capacity'],
             'name': self.fognames[fidx],
@@ -122,17 +112,16 @@ class Solution:
         """ 
             Computes the status of all the fog nodes for a certain microservices' mapping. 
         """
-
         # for each fog node
         for fidx in range(self.nf):
             self.compute_fog_performance(fidx)
 
     def is_rho_overload(self, rho):
-        return rho>=1
+        return rho>=1.0
 
     def is_node_overload(self, fidx):
         self.compute_fog_performance(fidx)
-        return self.fog[fidx]['rho'] >= 1.0
+        return self.is_rho_overload(self.fog[fidx]['rho'])
 
     def overload_waittime(self, mu, rho):
         # if overloaded, the penalty is proportional to rho
@@ -182,7 +171,6 @@ class Solution:
             It calculates resptime, waittime, servicetime and networktime.
             Returns the dict of all this params with the key that is service's name.
         """
-
         rv = {}
         # for each service chain
         for sc in self.problem.get_servicechain_list():
@@ -218,7 +206,6 @@ class Solution:
             Calculates the objective function.
             Is the sum of resptime * weight for all the servicechains. 
         """
-
         tr_tot = 0.0
         if not self.resptimes:
             self.resptimes = self.compute_performance()
@@ -279,7 +266,6 @@ class Solution:
             From a given fog node's name it returns the status.
             It calcutes the status' fog if was not.
         """
-
         if not self.resptimes:
             self.obj_func()
         for f in self.fog:
@@ -306,7 +292,6 @@ class Solution:
 
     def get_problem(self):
         return self.problem
-
 
 if __name__ == '__main__':
     fin = "sample/sample_input2.json" if len(sys.argv) == 1 else sys.argv[1]
