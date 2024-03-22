@@ -40,7 +40,7 @@ class Solution:
 
     def get_service_list(self, fidx):
         """ Returns a list of all the microservices allocated in the fog node of the given index. """
-        return [self.service[s] for (n, s) in enumerate(self.mapping) if s==fidx]
+        return [self.service[n] for (n, s) in enumerate(self.mapping) if s==fidx]
 
     def set_extra_param(self, param, value):
         """ Sets a new param in an object Solution. """
@@ -63,6 +63,7 @@ class Solution:
         #print(self.mapping)
         # get list of services for that node
         serv = self.get_service_list(fidx)
+        #print(fidx, serv)
         f    = self.problem.get_fog(self.fognames[fidx])
         # compute average service time for that node
         # compute stddev for that node
@@ -78,19 +79,23 @@ class Solution:
             # compute weights: w_i=lam_i/lam_tot
             # compute average service time: tserv=sum_i(w_i * tserv_i)
             tserv += ms['lambda'] * ms['meanserv']
+            #print(f'{s}: lambda: {ms["lambda"]}, ts: {ms["meanserv"]}')
             # compute stddev: std=sqrt(sum_i w_i*(sigma_i^2+mu_i^1) - mu^2)
             std += ms['lambda'] * (ms['stddevserv']**2 + ms['meanserv']**2)
             lam_tot += ms['lambda']
         if lam_tot != 0:
+            #tserv_old=tserv
             tserv = tserv / lam_tot
             std = sqrt((std/lam_tot) - (tserv**2))
             tserv = tserv / f['capacity']
             std = std / f['capacity']
+            #print(f'tserv={tserv_old}/({lam_tot}*{f["capacity"]})={tserv}\n')
             # compute mu and Cov for node
             cv = std / tserv
             mu = 1.0 / tserv
-            rho   = lam_tot / mu
+            rho   = lam_tot * tserv
             twait = self.mg1_waittime(lam_tot, mu, cv)
+            # print(f'twait(lam={lam_tot}, mu={mu}, cv={cv})={twait}')
             # print(self.fognames[fidx], tserv, std, rho, twait)
         else:
             tserv, std, mu, cv, rho, twait = 0, 0, 0, 0, 0, 0
@@ -147,10 +152,10 @@ class Solution:
         # M/G/1 Pollaczek-Khinchin formula
         rho = lam / mu
         if self.is_rho_overload(rho):
-            rv = (1.0 / mu) * ((1.0 + cv**2) / 2.0) * (rho / (1.0 - rho))
-            # print(f'M/G/1(tserv={1.0/mu}, cv={cv}, rho={rho})={rv}')
-        else:
             rv = self.overload_waittime(mu, rho)
+            #print('overload detected!')
+        else:
+            rv = (1.0 / mu) * ((1.0 + cv**2) / 2.0) * (rho / (1.0 - rho))
         return rv
 
     def gg1_waittime(self, lam, mu, cva, cvs):

@@ -19,14 +19,14 @@ class SolutionPerf(Solution):
             It calculates tserv, stddev, lambda, cv, mu, rho, twait and tresp.  
             All this params are then used to check if the solution is feasible or not.  
         """
-        print(f'SolutionPerf.compute_fog_performance({fidx})')
+        #print(f'SolutionPerf.compute_fog_performance({fidx})')
         super().compute_fog_performance(fidx)
 
     def compute_fog_status(self):
         """ 
             Computes the status of all the fog nodes for a certain microservices' mapping. 
         """
-        print('SolutionPerf.compute_fog_status()')
+        #print('SolutionPerf.compute_fog_status()')
         super().compute_fog_status()
 
     def compute_performance(self):
@@ -35,7 +35,7 @@ class SolutionPerf(Solution):
             It calculates resptime, waittime, servicetime and networktime.
             Returns the dict of all this params with the key that is service's name.
         """
-        print('SolutionPerf.compute_performance()')
+        #print('SolutionPerf.compute_performance()')
         return super().compute_performance()
 
     def obj_func(self):
@@ -47,7 +47,7 @@ class SolutionPerf(Solution):
 
     def dump_solution(self):
         """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """
-        print('call to dump_solution in SolutionPerf class')
+        #print('call to dump_solution in SolutionPerf class')
         return super().dump_solution()
 
 if __name__ == '__main__':
