@@ -41,14 +41,24 @@ def cx_uniform_fog(ind1, ind2, indpb, problem: Problem):
     return ind1, ind2
 
 
-def init_ga(problem: Problem):
-    problem_type=problem.get_problem_type()
-    if problem_type == 'ProblemPerf':
-        from .ga_perf import init_ga as initga
-        return initga(problem)
-    if problem_type == 'ProblemPwr':
-        from .ga_pwr import init_ga as initga
-        return initga(problem)
+def init_ga(problem):
+    # Initialization
+    toolbox = base.Toolbox()
+    try:
+        del creator.FitnessMin
+        del creator.Individual
+    except AttributeError:
+        pass
+    creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+    creator.create("Individual", list, fitness=creator.FitnessMin)
+    toolbox.register("individual", load_individuals, creator.Individual, problem)
+    toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+
+    toolbox.register("evaluate", obj_func, problem=problem)
+    toolbox.register("mate", cx_uniform_fog, indpb=0.5, problem=problem)
+    toolbox.register("mutate", mut_uniform_fog, indpb=0.05, problem=problem)
+    toolbox.register("select", tools.selTournament, tournsize=7)
+    return toolbox
 
 
 def get_convergence(log, min_obj, eps=0.01):
@@ -95,12 +105,12 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem:Problem):
     return best
 
 
-def dump_solution(gaout, sol: Solution):
+def dump_solution(gaout, sol):
     with open(gaout, "w+") as f:
         json.dump(sol.dump_solution(), f, indent=2)
 
 
-def solve_problem(problem: Problem):
+def solve_problem(problem):
     cxbp = 0.5
     mutpb = 0.3
     problem.begin_solution()

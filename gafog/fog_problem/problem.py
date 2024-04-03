@@ -217,6 +217,9 @@ class Problem:
         except AttributeError:
             return -1.0
     
+    def get_problem_type(self):
+        return self.__class__.__name__
+    
 if __name__ == '__main__':
     with open('sample/sample_input2.json') as f:
         data = json.load(f)
