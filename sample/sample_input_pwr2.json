@@ -1,5 +1,5 @@
 {
-    "type:": "performance",
+    "type": "power",
     "response": "file://sample/sample_output.json",
     "fog": {
         "F1": {

@@ -114,7 +114,26 @@ class SolutionPwr(Solution):
         return rv
 
     def compute_power(self):
-        pass
+        rv = {}
+        # for each service chain
+        for sc in self.problem.get_servicechain_list():
+            #prevfog = None
+            pwr=0.0
+            # for each service
+            for s in self.problem.get_microservice_list(sc=sc):
+                if self.mapping[self.serviceidx[s]] is not None:
+                    # get fog node id from service name
+                    fidx  = self.mapping[self.serviceidx[s]]
+                    fname = self.fognames[fidx]
+                    # add tresp for node where the service is located
+                    pwr += self.fog[fidx]['power']
+                    #if prevfog is not None:
+                    #    pwr   += 1.0
+                    #prevfog = fname
+                #else:
+                #    prevfog = None
+            rv[sc] = {'pwr': pwr}
+        return rv
 
     def obj_func(self):
         """ 
@@ -125,6 +144,7 @@ class SolutionPwr(Solution):
         tr_tot = 0.0
         if not self.resptimes:
             self.resptimes = self.compute_performance()
+            self.power=self.compute_power()
         for sc in self.resptimes:
             tr_tot += (self.resptimes[sc]['resptime'] * self.problem.servicechain[sc]['weight'])
         return tr_tot
@@ -158,7 +178,6 @@ def normalize_individual(ind, problem: Problem):
 
 # TODO create genetic operators !!!
 
-# FIXME: adapt to operator our problem
 def cx_solution_pwr(ind1, ind2):
     """Executes an ordered crossover (OX) on the input
     individuals. The two individuals are modified in place. This crossover

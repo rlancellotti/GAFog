@@ -16,33 +16,10 @@ numPop = 600    # initial number of individuals at gen0
 #numPop = 60    # initial number of individuals at gen0
 #problem = None
 
-def obj_func(individual, problem: Problem):
-    sol = problem.get_solution(individual)
-    return sol.obj_func(),
-
-def load_individuals(creator, problem: Problem):
-    individual = list()
-    for i in range(problem.get_nservice()):
-        individual.append(random.randint(0, problem.get_nfog() - 1))
-    return creator(individual)
-
-def mut_uniform_fog(individual, indpb, problem: Problem):
-    for i in range(len(individual)):
-        if random.random() < indpb:
-            individual[i] = random.randint(0, problem.get_nfog() - 1)
-    return (individual,)
-
-
-def cx_uniform_fog(ind1, ind2, indpb, problem: Problem):
-    size = min(len(ind1), len(ind2))
-    for i in range(size):
-        if random.random() < indpb:
-            ind1[i], ind2[i] = ind2[i], ind1[i]
-    return ind1, ind2
-
 
 def init_ga(problem: Problem):
     problem_type=problem.get_problem_type()
+    print(f'problem type: {problem_type}')
     if problem_type == 'ProblemPerf':
         from .ga_perf import init_ga as initga
         return initga(problem)
@@ -53,7 +30,7 @@ def init_ga(problem: Problem):
 
 def get_convergence(log, min_obj, eps=0.01):
     # gen=log.select("gen")
-    stds = log.select("std")
+    # stds = log.select("std")
     mins = log.select("min")
     convgen = -1
     for i in range(len(mins)):
@@ -117,7 +94,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', help="output file. Default sample_output2.json")
 
     args = parser.parse_args()
-    fname = args.file or "sample/sample_input2.json"
+    fname = args.file or "sample/sample_input_pwr2.json"
     with open(fname) as f:
         data = json.load(f)
     # FIXME: use problem loader
@@ -125,6 +102,6 @@ if __name__ == "__main__":
     sol = solve_problem(problem)
     print(sol)
 
-    fname = "sample/" + (args.output or "sample_output2.json")
+    fname = "sample/" + (args.output or "sample_output_pwr2.json")
     with open(fname, "w") as f:
         json.dump(sol.dump_solution(), f, indent=2)

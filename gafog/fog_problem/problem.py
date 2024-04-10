@@ -6,6 +6,12 @@ import time
 def load_problem(problem_dct: dict):
     from ..fog_problem.problem_perf import ProblemPerf
     from ..fog_problem.problem_pwr import ProblemPwr
+    print(problem_dct.keys())
+    if 'type' in problem_dct.keys(): print(problem_dct['type'])
+    if 'type' in problem_dct.keys() and problem_dct['type'] == 'performance':
+        return ProblemPerf(problem_dct)
+    if 'type' in problem_dct.keys() and problem_dct['type'] == 'power':
+        return ProblemPwr(problem_dct)
     return ProblemPerf(problem_dct)
 
 class Problem:
