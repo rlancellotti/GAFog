@@ -113,27 +113,11 @@ class SolutionPwr(Solution):
             }
         return rv
 
-    def compute_power(self):
-        rv = {}
-        # for each service chain
-        for sc in self.problem.get_servicechain_list():
-            #prevfog = None
-            pwr=0.0
-            # for each service
-            for s in self.problem.get_microservice_list(sc=sc):
-                if self.mapping[self.serviceidx[s]] is not None:
-                    # get fog node id from service name
-                    fidx  = self.mapping[self.serviceidx[s]]
-                    fname = self.fognames[fidx]
-                    # add tresp for node where the service is located
-                    pwr += self.fog[fidx]['power']
-                    #if prevfog is not None:
-                    #    pwr   += 1.0
-                    #prevfog = fname
-                #else:
-                #    prevfog = None
-            rv[sc] = {'pwr': pwr}
-        return rv
+
+    def get_pwr_obj_scale(self):
+        K=100
+        tot_servtime=sum(self.problem.get_microservice(item)['meanserv'] for item in self.problem.get_microservice_list())
+        return K * tot_servtime
 
     def obj_func(self):
         """ 
@@ -141,13 +125,17 @@ class SolutionPwr(Solution):
             Is the sum of resptime * weight for all the servicechains. 
         """
 
-        tr_tot = 0.0
+        tr_tot, pwr_tot = 0.0, 0.0
         if not self.resptimes:
             self.resptimes = self.compute_performance()
-            self.power=self.compute_power()
         for sc in self.resptimes:
             tr_tot += (self.resptimes[sc]['resptime'] * self.problem.servicechain[sc]['weight'])
-        return tr_tot
+        # FIXME: must compute power consumption for each fog!
+        for fidx in range(self.nf):
+            f = self.fog[fidx]
+            #prevfog = None
+            pwr_tot += 1 + f['rho'] if f['rho']>0 else 0
+        return pwr_tot * self.get_pwr_obj_scale() + tr_tot
 
     def dump_solution(self):
         """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """

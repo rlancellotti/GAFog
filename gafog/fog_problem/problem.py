@@ -174,7 +174,7 @@ class Problem:
             Returns all the params in the dict of the given microservice. 
             If ms doesn't exists then it returns None. 
         """
-        if ms in self.microservice:
+        if ms in self.microservice.keys():
             return self.microservice[ms]
 
     def get_fog(self, f):
@@ -182,7 +182,7 @@ class Problem:
             Returns all the params in the dict of the given fog node. 
             If f doesn't exists then it returns None. 
         """
-        if f in self.fog:
+        if f in self.fog.keys():
             return self.fog[f]
 
     def get_nfog(self):
