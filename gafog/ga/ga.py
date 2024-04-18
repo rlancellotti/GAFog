@@ -87,14 +87,17 @@ def solve_problem(problem: Problem):
     sol.register_execution_time()
     return sol
 
+DEFAULT_DIR='sample'
+DEFAULT_INPUT='sample_input_pwr2.json'
+DEFAULT_OUTPUT='sample_output_pwr2.json'
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', help='input file. Default sample_input2.json')
-    parser.add_argument('-o', '--output', help="output file. Default sample_output2.json")
+    parser.add_argument('-f', '--file', help=f'input file. Default {DEFAULT_DIR}/{DEFAULT_INPUT}')
+    parser.add_argument('-o', '--output', help=f'output file. Default {DEFAULT_DIR}/{DEFAULT_OUTPUT}')
 
     args = parser.parse_args()
-    fname = args.file or "sample/sample_input_pwr2.json"
+    fname = args.file or f'{DEFAULT_DIR}/{DEFAULT_INPUT}'
     with open(fname) as f:
         data = json.load(f)
     # FIXME: use problem loader
@@ -102,6 +105,6 @@ if __name__ == "__main__":
     sol = solve_problem(problem)
     print(sol)
 
-    fname = "sample/" + (args.output or "sample_output_pwr2.json")
+    fname = args.output or f'{DEFAULT_DIR}/{DEFAULT_OUTPUT}'
     with open(fname, "w") as f:
         json.dump(sol.dump_solution(), f, indent=2)

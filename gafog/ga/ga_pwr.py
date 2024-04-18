@@ -42,10 +42,14 @@ def normalize_individual(ind, problem: ProblemPwr):
         prv_fog = is_fog(ind[i], nsrv)
         #print(i, ind[i], to_remove)
     #print(ind, to_remove)
-    for i in to_remove:
-        ind.pop(i)
+    to_remove.sort(reverse = True)
+    try:
+        for i in to_remove:
+            ind.pop(i)
+    except:
+        print(f'failure while removing: to remove: {to_remove} individual: {ind}')
     if ind_ok and not check_individual_correct(ind, problem):
-        print(f'*** normalize_individual generating error: {old_individual} -> {ind}')
+        print(f'*** normalize_individual generating error: {old_individual}(fog >= {nsrv}) -> {ind}')
     return ind
 
 def check_individual_correct(individual, problem: ProblemPwr, print_warning=False):
