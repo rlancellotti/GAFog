@@ -128,6 +128,25 @@ class Solution:
         self.compute_fog_performance(fidx)
         return self.is_rho_overload(self.fog[fidx]['rho'])
 
+    def get_overload_penalty(self):
+        penalty=0.0
+        for f in self.fog:
+            if f is not None and 'rho' in f.keys() and f['rho']>=1:
+                penalty += f['rho']
+        return penalty
+
+    def get_SLA_penalty(self):
+        penalty=0.0
+        if not self.resptimes:
+            self.resptimes = self.compute_performance()
+        for sc in self.resptimes:
+            if self.resptimes[sc]['resptime'] > self.problem.servicechain[sc]['sla']:
+                penalty += self.resptimes[sc]['resptime']/self.problem.servicechain[sc]['meansrv']
+        return penalty
+
+    def get_penalty(self):
+        return self.get_overload_penalty() * self.nf + self.get_SLA_penalty() * len(self.problem.get_get_servicechain_list())
+
     def overload_waittime(self, mu, rho):
         # if overloaded, the penalty is proportional to rho
         # this should guide the GA towards acceptable solutions
@@ -136,7 +155,7 @@ class Solution:
     def mm1_waittime(self, lam, mu):
         # classical M/M/1 formula
         rho = lam / mu
-        if self.is_rho_overload(rho):
+        if not self.is_rho_overload(rho):
             return rho / (1 - rho)
         else:
             return self.overload_waittime(mu, rho)
@@ -216,7 +235,8 @@ class Solution:
             self.resptimes = self.compute_performance()
         for sc in self.resptimes:
             tr_tot += (self.resptimes[sc]['resptime'] * self.problem.servicechain[sc]['weight'])
-        return tr_tot
+        penalty=self.get_penalty()
+        return tr_tot + penalty
 
     def dump_solution(self):
         """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """
@@ -259,7 +279,7 @@ class Solution:
                 'lambda': f['lambda'],
                 'twait': f['twait'],
             }
-       
+
         rv['extra'] = self.extra_param
         if not self.problem.network_is_fake:
             rv['network'] = self.problem.network_as_matrix()

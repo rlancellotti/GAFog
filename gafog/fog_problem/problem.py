@@ -1,13 +1,13 @@
 import json
 import time
 
-#from ..fog_problem.problProblem.dict()em_pwr import ProblemPwr
+DEFAULT_SLA_K = 10
 
 def load_problem(problem_dct: dict):
     from ..fog_problem.problem_perf import ProblemPerf
     from ..fog_problem.problem_pwr import ProblemPwr
-    print(problem_dct.keys())
-    if 'type' in problem_dct.keys(): print(problem_dct['type'])
+    #print(problem_dct.keys())
+    #if 'type' in problem_dct.keys(): print(problem_dct['type'])
     if 'type' in problem_dct.keys() and problem_dct['type'] == 'performance':
         return ProblemPerf(problem_dct)
     if 'type' in problem_dct.keys() and problem_dct['type'] == 'power':
@@ -22,7 +22,7 @@ class Problem:
         self.servicechain = problem_dct['servicechain']
         self.microservice = problem_dct['microservice']
         self.handle_network(problem_dct)
-            
+        self.sla_K = problem_dct['sla_K'] if 'sla_K' in problem_dct.keys() else DEFAULT_SLA_K
         self.maxrho = 0.999
         self.compute_service_params()
         self.compute_chain_params()
@@ -134,7 +134,7 @@ class Problem:
     def compute_chain_params(self):
         """ 
             Computes the params of all the servicechain. 
-            It calculates lambda and weight.    
+            It calculates lambda, weight, service time and SLA
         """
         tot_weight = 0.0
         for sc in self.servicechain:
@@ -155,6 +155,12 @@ class Problem:
             if 'weight' not in self.servicechain[sc]:
                 self.servicechain[sc]['weight'] = lam
             tot_weight += self.servicechain[sc]['weight']
+            # compute service time and SLA
+            serv_time=0.0
+            for ms in self.servicechain[sc]['services']:
+                serv_time += self.get_microservice(ms)['meanserv']
+            self.servicechain[sc]['meanserv'] = serv_time
+            self.servicechain[sc]['sla'] = serv_time * self.sla_K
         # normalize weights
         for sc in self.servicechain:
             self.servicechain[sc]['weight'] /= tot_weight

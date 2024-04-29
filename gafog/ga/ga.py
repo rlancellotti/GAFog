@@ -19,7 +19,7 @@ numPop = 600    # initial number of individuals at gen0
 
 def init_ga(problem: Problem):
     problem_type=problem.get_problem_type()
-    print(f'problem type: {problem_type}')
+    #print(f'problem type: {problem_type}')
     if problem_type == 'ProblemPerf':
         from .ga_perf import init_ga as initga
         return initga(problem)

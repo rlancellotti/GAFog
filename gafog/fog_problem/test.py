@@ -40,6 +40,8 @@ class TestProblem(unittest.TestCase):
         p = load_problem(sample_problem_perf)
         self.assertEqual(p.get_servicechain_list(), ['SC1', 'SC2'])
 
+    # FIXME: add test for service time and SLA
+
     # Microservices
     def test_nservice(self):
         """ Tests if there is the right number of microservices. """

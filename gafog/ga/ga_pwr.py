@@ -5,7 +5,7 @@ from ..fog_problem.problem_pwr import ProblemPwr
 
 def init_ga(problem: ProblemPwr):
     # Initialization
-    print('call to init_ga[pwr]')
+    #print('call to init_ga[pwr]')
     toolbox = base.Toolbox()
     try:
         del creator.FitnessMin
