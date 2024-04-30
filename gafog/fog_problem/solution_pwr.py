@@ -124,7 +124,7 @@ class SolutionPwr(Solution):
             Calculates the objective function.
             Is the sum of resptime * weight for all the servicechains. 
         """
-
+        #FIXME: must add penaties!!!
         tr_tot, pwr_tot = 0.0, 0.0
         if not self.resptimes:
             self.resptimes = self.compute_performance()
@@ -164,61 +164,6 @@ def normalize_individual(ind, problem: Problem):
         ind.pop(i)
     return ind
 
-# TODO create genetic operators !!!
-
-def cx_solution_pwr(ind1, ind2):
-    """Executes an ordered crossover (OX) on the input
-    individuals. The two individuals are modified in place. This crossover
-    expects :term:`sequence` individuals of indices, the result for any other
-    type of individuals is unpredictable.
-
-    :param ind1: The first individual participating in the crossover.
-    :param ind2: The second individual participating in the crossover.
-    :returns: A tuple of two individuals.
-
-    Moreover, this crossover generates holes in the input
-    individuals. A hole is created when an attribute of an individual is
-    between the two crossover points of the other individual. Then it rotates
-    the element so that all holes are between the crossover points and fills
-    them with the removed elements in order. For more details see
-    [Goldberg1989]_.
-
-    This function uses the :func:`~random.sample` function from the python base
-    :mod:`random` module.
-
-    .. [Goldberg1989] Goldberg. Genetic algorithms in search,
-       optimization and machine learning. Addison Wesley, 1989
-    """
-
-    size = min(len(ind1), len(ind2))
-    a, b = random.sample(range(size), 2)
-    if a > b:
-        a, b = b, a
-
-    holes1, holes2 = [True] * size, [True] * size
-    for i in range(size):
-        if i < a or i > b:
-            holes1[ind2[i]] = False
-            holes2[ind1[i]] = False
-
-    # We must keep the original values somewhere before scrambling everything
-    temp1, temp2 = ind1, ind2
-    k1, k2 = b + 1, b + 1
-    for i in range(size):
-        if not holes1[temp1[(i + b + 1) % size]]:
-            ind1[k1 % size] = temp1[(i + b + 1) % size]
-            k1 += 1
-
-        if not holes2[temp2[(i + b + 1) % size]]:
-            ind2[k2 % size] = temp2[(i + b + 1) % size]
-            k2 += 1
-
-    # Swap the content between a and b (included)
-    for i in range(a, b + 1):
-        ind1[i], ind2[i] = ind2[i], ind1[i]
-
-    return ind1, ind2
-
 def init_pwr(nfog=5, nfog_on=2, nservices=5):
     min_service=0
     max_service=nservices
@@ -252,52 +197,6 @@ def chains_to_individual(chains):
     for ch in chains:
         individual += [ch['fog']]+ch['services']
     return individual
-
-def mut_del_fog(individual, indpb, problem: Problem):
-    chains=individual_to_chains(individual, problem)
-    ch_to_remove=[]
-    for i, ch in enumerate(chains):
-        if random.random() < indpb:
-            ch_to_remove.append(i)
-            # FIXME: move microservices to other fog ndoes
-            for s in ch['services']:
-                newfog = random.randint(0,len(chains))
-                while newfog in ch_to_remove:
-                    newfog = random.randint(0,len(chains))
-                chains[i]['services'].append(s)
-    for i in ch_to_remove:
-        chains.pop(i)
-    return individual,    
-
-def mut_add_fog(individual, indpb, problem: Problem):
-    pass
-    # find list of off services
-    # decide which fog to add
-    # populate the fog
-
-def mut_shuffle_pwr(individual, indpb, problem: Problem):
-    """
-    :param individual: Individual to be mutated.
-    :param indpb: Independent probability for each attribute to be exchanged to
-                  another position.
-    :returns: A tuple of one individual.
-    """
-
-    size = len(individual)
-    # mutate first element: it must be a fog node!
-    nsrv = problem.get_nservice()
-    if random.random() < indpb:
-            idx_fogs=[i for i in range(size) if is_fog(individual[i], nsrv)]
-            swap_indx = random.randint(1, len[idx_fogs]-1)
-            individual[0], individual[swap_indx] = individual[swap_indx], individual[0]
-    for i in range(1, size):
-        if random.random() < indpb:
-            swap_indx = random.randint(0, size - 2)
-            if swap_indx >= i:
-                swap_indx += 1
-            individual[i], individual[swap_indx] = individual[swap_indx], individual[i]
-
-    return normalize_individual(individual),
 
 if __name__ == '__main__':
     #print(normalize_individual(init_pwr()))

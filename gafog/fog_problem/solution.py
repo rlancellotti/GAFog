@@ -155,10 +155,10 @@ class Solution:
     def mm1_waittime(self, lam, mu):
         # classical M/M/1 formula
         rho = lam / mu
-        if not self.is_rho_overload(rho):
-            return rho / (1 - rho)
-        else:
+        if self.is_rho_overload(rho):
             return self.overload_waittime(mu, rho)
+        else:
+            return rho / (1 - rho)
 
     def mg1_waittime(self, lam, mu, cv):
         """ 
