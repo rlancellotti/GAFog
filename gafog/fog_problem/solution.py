@@ -141,7 +141,7 @@ class Solution:
             self.resptimes = self.compute_performance()
         for sc in self.resptimes:
             if self.resptimes[sc]['resptime'] > self.problem.servicechain[sc]['sla']:
-                penalty += self.resptimes[sc]['resptime']/self.problem.servicechain[sc]['meansrv']
+                penalty += self.resptimes[sc]['resptime']/self.problem.servicechain[sc]['meanserv']
         return penalty
 
     def get_penalty(self):

@@ -135,7 +135,7 @@ class SolutionPwr(Solution):
             f = self.fog[fidx]
             #prevfog = None
             pwr_tot += 1 + f['rho'] if f['rho']>0 else 0
-        return pwr_tot * self.get_pwr_obj_scale() + tr_tot
+        return (pwr_tot + self.get_SLA_penalty() + self.get_overload_penalty()) * self.get_pwr_obj_scale() + tr_tot
 
     def dump_solution(self):
         """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """
