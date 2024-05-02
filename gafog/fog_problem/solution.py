@@ -222,6 +222,7 @@ class Solution:
                 'waittime': twait,
                 'servicetime': tsrv,
                 'networktime': tnet,
+                'sla': self.problem.servicechain[sc]['sla']
             }
         return rv
 

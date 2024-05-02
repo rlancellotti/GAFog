@@ -72,48 +72,6 @@ class SolutionPwr(Solution):
             self.compute_fog_performance(fidx)
             self.compute_fog_power(fidx)
 
-    def compute_performance(self):
-        """ 
-            Computes the performance of all the servicechains.
-            It calculates resptime, waittime, servicetime and networktime.
-            Returns the dict of all this params with the key that is service's name.
-        """
-
-        rv = {}
-        # for each service chain
-        for sc in self.problem.get_servicechain_list():
-            prevfog = None
-            tr = 0.0
-            twait = 0.0
-            tnet  = 0.0
-            tsrv  = 0.0
-            # for each service
-            for s in self.problem.get_microservice_list(sc=sc):
-                if self.mapping[self.serviceidx[s]] is not None:
-                    # get fog node id from service name
-                    fidx  = self.mapping[self.serviceidx[s]]
-                    fname = self.fognames[fidx]
-                    # add tresp for node where the service is located
-                    tr += self.fog[fidx]['twait']
-                    tsrv += self.problem.get_microservice(s)['meanserv'] / self.fog[fidx]['capacity']
-                    twait += self.fog[fidx]['twait']
-                    # add tnet for every node (except first)
-                    if prevfog is not None:
-                        tr   += self.problem.get_delay(prevfog, fname)['delay']
-                        tnet += self.problem.get_delay(prevfog, fname)['delay']
-                    prevfog = fname
-                else:
-                    prevfog = None
-            rv[sc] = {
-                'resptime': twait + tsrv + tnet,
-                'resptime_old': tr,
-                'waittime': twait,
-                'servicetime': tsrv,
-                'networktime': tnet,
-            }
-        return rv
-
-
     def get_pwr_obj_scale(self):
         K=100
         tot_servtime=sum(self.problem.get_microservice(item)['meanserv'] for item in self.problem.get_microservice_list())
@@ -142,7 +100,7 @@ class SolutionPwr(Solution):
 
         rv=super().dump_solution()
         for f in self.fog:
-            rv['fog'][f['name']]['power'] = 1
+            rv['fog'][f['name']]['power'] = 1 if rv['fog'][f['name']]['rho'] > 0 else 0
         return rv
 
 def normalize_individual(ind, problem: Problem):
