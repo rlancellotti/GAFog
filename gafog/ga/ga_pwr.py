@@ -19,7 +19,7 @@ def init_ga(problem: ProblemPwr):
 
     toolbox.register("evaluate", obj_func, problem=problem)
     toolbox.register("mate", cx_solution_pwr, problem=problem)
-    toolbox.register("mutate", mut_shuffle_pwr, indpb=0.05, problem=problem)
+    toolbox.register("mutate", mut_pwr, problem=problem, shprob=0.5, addprob=0.0, delprob=0.0)
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
@@ -233,7 +233,17 @@ def mut_add_fog(individual, indpb, problem: ProblemPwr):
     # decide which fog to add
     # populate the fog
 
-def mut_shuffle_pwr(individual, indpb, problem: ProblemPwr):
+def mut_pwr(individual, problem: ProblemPwr, shprob=0.2, addprob=0, delprob=0):
+    if random.random() < shprob:
+        individual,=mut_shuffle(individual, problem)
+    if random.random() < addprob:
+        individual,=mut_add_fog(individual, problem)
+    if random.random() < delprob:
+        individual,=mut_del_fog(individual, problem)
+    return individual,
+    
+
+def mut_shuffle(individual, problem: ProblemPwr):
     """
     :param individual: Individual to be mutated.
     :param indpb: Independent probability for each attribute to be exchanged to
@@ -241,22 +251,22 @@ def mut_shuffle_pwr(individual, indpb, problem: ProblemPwr):
     :returns: A tuple of one individual.
     """
     size = len(individual)
-    # mutate first element: it must be a fog node!
     old_individual=individual[:]
     ind_ok=check_individual_correct(individual, problem)
     nsrv = problem.get_nservice()
-    if random.random() < indpb:
-            idx_fogs=[i for i in range(size) if is_fog(individual[i], nsrv)]
-            #print(f'mutation: {individual}, nservices: {nsrv} fog indexes: {idx_fogs}')
-            if len(idx_fogs)>1:
-                swap_indx = random.randint(0, len(idx_fogs)-1)
-                individual[0], individual[idx_fogs[swap_indx]] = individual[idx_fogs[swap_indx]], individual[0]
-    for i in range(1, size):
-        if random.random() < indpb:
-            swap_indx = random.randint(1, size - 2)
-            if swap_indx >= i:
-                swap_indx += 1
-            individual[i], individual[swap_indx] = individual[swap_indx], individual[i]
+    src_idx=random.randint(0, size - 2)
+    if src_idx==0:
+        # fist element is a fog node and must be swapped with another fog node
+        idx_fogs=[i for i in range(size) if is_fog(individual[i], nsrv)]
+        #print(f'mutation: {individual}, nservices: {nsrv} fog indexes: {idx_fogs}')
+        if len(idx_fogs)>1:
+            dst_idx = random.randint(0, len(idx_fogs)-1)
+            individual[0], individual[idx_fogs[dst_idx]] = individual[idx_fogs[dst_idx]], individual[0]
+    else:        
+        dst_idx = random.randint(1, size - 2)
+        if dst_idx >= src_idx:
+            dst_idx += 1
+        individual[src_idx], individual[dst_idx] = individual[dst_idx], individual[src_idx]
     normalize_individual(individual, problem)
     if ind_ok and not check_individual_correct(individual, problem):
         print(f'mutation generating error: {old_individual} -> {individual}')
