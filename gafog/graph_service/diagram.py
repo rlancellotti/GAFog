@@ -3,10 +3,11 @@
 import argparse
 import json
 from diagrams import Diagram, Cluster, Edge
-from diagrams.alibabacloud.compute import ElasticComputeService as Fog
+#from diagrams.alibabacloud.compute import ElasticComputeService as Fog
+from diagrams.custom import Custom
 from diagrams.alibabacloud.iot import IotLinkWan as Sensor
 from diagrams.alibabacloud.compute import WebAppService as Service
-import os
+from pathlib import Path
 
 def begin_of_chain(data, sc):
     return list(data['servicechain'][sc]['services'].keys())[0]
@@ -42,7 +43,11 @@ def make_diagram(data, outfile):
         with Cluster('Fog nodes', graph_attr=graph_attr):
             fog={}
             for f in data['fog'].keys():
-                fog[f]=Fog(f, fontsize=fontsize)
+                if data['fog'][f]['rho']==0:
+                    fog[f]=Custom(f, str(Path(__file__).resolve().parent)+'/fog_off.png', fontsize=fontsize)
+                else:
+                    fog[f]=Custom(f, str(Path(__file__).resolve().parent)+'/fog_on.png', fontsize=fontsize)
+            print(fog[f]._icon)
         # mapping of services to fog nodes
         for s in data['microservice']:
             svc[s] >> Edge(style="dashed") >> fog[data['microservice'][s]]
