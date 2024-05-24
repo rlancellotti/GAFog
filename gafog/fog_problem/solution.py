@@ -145,7 +145,7 @@ class Solution:
         return penalty
 
     def get_penalty(self):
-        return self.get_overload_penalty() * self.nf + self.get_SLA_penalty() * len(self.problem.get_get_servicechain_list())
+        return self.get_overload_penalty() * self.nf + self.get_SLA_penalty() * len(self.problem.get_servicechain_list())
 
     def overload_waittime(self, mu, rho):
         # if overloaded, the penalty is proportional to rho
@@ -226,18 +226,29 @@ class Solution:
             }
         return rv
 
-    def obj_func(self):
-        """ 
-            Calculates the objective function.
-            Is the sum of resptime * weight for all the servicechains. 
-        """
+    def compute_tr(self):
         tr_tot = 0.0
         if not self.resptimes:
             self.resptimes = self.compute_performance()
         for sc in self.resptimes:
             tr_tot += (self.resptimes[sc]['resptime'] * self.problem.servicechain[sc]['weight'])
+        return tr_tot
+    
+    def obj_func(self):
+        """ 
+            Calculates the objective function.
+            Is the sum of resptime * weight for all the servicechains. 
+        """
+        tr_tot = self.compute_tr()
         penalty=self.get_penalty()
         return tr_tot + penalty
+    
+    def get_obj_func_components(self):
+        return {
+            'response_time': self.compute_tr(),
+            'SLA_penalty': self.get_SLA_penalty(),
+            'overload_penalty': self.get_overload_penalty()
+        }
 
     def dump_solution(self):
         """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """
