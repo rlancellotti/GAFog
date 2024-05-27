@@ -3,7 +3,7 @@ import argparse
 import requests
 from enum import Enum
 
-from ..fog_problem.problem import Problem
+from ..fog_problem.problem import Problem, load_problem
 from ..fog_problem.solution import Solution
 from ..ga import ga as gamod
 from ..mbfd import mbfd as mbfdmod
@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     with open(fname) as f:
         data = json.load(f)
-
-    sol = solve_problem(Problem(data), algo)
+    problem=load_problem(data)
+    sol = solve_problem(problem, algo)
 
     if sol:
         send_response(sol)
