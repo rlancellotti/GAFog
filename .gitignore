@@ -25,3 +25,4 @@ run_optimize.sh
 time.txt
 results/*
 run_paper.sh
+analysis/
