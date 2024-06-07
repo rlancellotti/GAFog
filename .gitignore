@@ -24,4 +24,6 @@ fog*.ned
 run_optimize.sh
 time.txt
 results/*
+best_sol_dumps/
+experiment_analysis/
 run_paper.sh

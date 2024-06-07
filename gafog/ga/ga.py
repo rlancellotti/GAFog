@@ -16,6 +16,8 @@ numPop = 600    # initial number of individuals at gen0
 #numPop = 10    # initial number of individuals at gen0
 #problem = None
 
+DEFAULT_CXPB = 0.5
+DEFAULT_MUTPB = 0.3
 
 def init_ga(problem: Problem):
     problem_type=problem.get_problem_type()
@@ -42,9 +44,10 @@ def get_convergence(log, min_obj, eps=0.01):
     return convgen
 
 
-def solve_ga_simple(toolbox, cxbp, mutpb, problem:Problem, filename_best_dump=None, delimiter='\t'):
+def solve_ga_simple(toolbox, cxpb, mutpb, problem:Problem, filename_best_dump=None, delimiter='\t'):
     # FIXME: should remove this global dependency!
     # GA solver
+    # TODO: MOVE THESE TWO CONSTANTS INTO THE PROBLEM 'OPTIMIZER' PARAMETERS
     global numPop, numGen
     pop = toolbox.population(n=numPop)
     # save best solution in Hall of Fame
@@ -84,7 +87,7 @@ def solve_ga_simple(toolbox, cxbp, mutpb, problem:Problem, filename_best_dump=No
     multi_statistics = tools.MultiStatistics(fitness=fitness_stats, solution=solution_stats)
 
     # Change verbose parameter to see population evolution
-    pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxbp, mutpb=mutpb, ngen=numGen, 
+    pop, log = algorithms.eaSimple(pop, toolbox, cxpb=cxpb, mutpb=mutpb, ngen=numGen, 
                                     stats=multi_statistics, halloffame=hof, verbose=False)
     best = problem.get_solution(hof[0])
     convergence = get_convergence(log.chapters['fitness'], best.obj_func())
@@ -126,11 +129,10 @@ def dump_solution(gaout, sol: Solution):
 
 
 def solve_problem(problem: Problem, filename_best_dump=None, delimiter='\t'):
-    cxbp = 0.5
-    mutpb = 0.3
+
     problem.begin_solution()
     toolbox = init_ga(problem)
-    sol = solve_ga_simple(toolbox, cxbp, mutpb, problem, filename_best_dump=filename_best_dump, delimiter=delimiter)
+    sol = solve_ga_simple(toolbox, problem.get_optimizer_parameter('cxpb'), problem.get_optimizer_parameter('mutpb'), problem, filename_best_dump=filename_best_dump, delimiter=delimiter)
     problem.end_solution()
     sol.register_execution_time()
     return sol
@@ -152,6 +154,11 @@ if __name__ == "__main__":
         data = json.load(f)
     # FIXME: use problem loader
     problem=load_problem(data)
+
+    problem.set_optimizer_parameters_dict(dict({
+        'cxpb': DEFAULT_CXPB,
+        'mutpb': DEFAULT_MUTPB,
+    }))
 
     solve_problem_kwargs = dict()
     if args.best_gen_file is not None:

@@ -30,13 +30,13 @@ def write_solution(fout, sol):
         json.dump(sol.dump_solution(), f, indent=2)
 
 
-def solve_problem(problem: Problem, algo):
+def solve_problem(problem: Problem, algo, filename_best_dump=None):
     if algo is None:
         return None
     # print(algo)
     match algo:
         case Algorithms.GA:
-            return gamod.solve_problem(problem)
+            return gamod.solve_problem(problem, filename_best_dump=filename_best_dump)
 
         case Algorithms.MBFD:
             return mbfdmod.solve_problem(problem)
