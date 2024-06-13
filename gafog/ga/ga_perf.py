@@ -27,14 +27,19 @@ def load_individuals(creator, problem: Problem):
         individual.append(random.randint(0, problem.get_nfog() - 1))
     return creator(individual)
 
-def mut_uniform_fog(individual, problem: Problem, indpb=0.05):
+'''
+NOTE: Adding a *args argument before the keyword arguments is essential in order
+to ensure the correct functioning of some of the operations performed by
+problem_gen/analysis_db.py (this refers to all mutation and crossover functions)
+'''
+def mut_uniform_fog(individual, problem: Problem, *args, indpb=0.05):
     for i in range(len(individual)):
         if random.random() < indpb:
             individual[i] = random.randint(0, problem.get_nfog() - 1)
     return (individual,)
 
 
-def cx_uniform_fog(ind1, ind2, problem: Problem, indpb=0.5):
+def cx_uniform_fog(ind1, ind2, problem: Problem, *args, indpb=0.5):
     size = min(len(ind1), len(ind2))
     for i in range(size):
         if random.random() < indpb:

@@ -231,13 +231,20 @@ def mut_del_fog(individual, indpb, problem: ProblemPwr):
         chains.pop(i)
     return individual,    
 
+
 def mut_add_fog(individual, indpb, problem: ProblemPwr):
     pass
     # find list of off services
     # decide which fog to add
     # populate the fog
 
-def mut_pwr(individual, problem: ProblemPwr, shprob=0.5, addprob=0, delprob=0):
+'''
+NOTE: Adding a *args argument before the keyword arguments is essential in order
+to ensure the correct functioning of some of the operations performed by
+problem_gen/analysis_db.py (this refers to all mutation and crossover functions)
+'''
+
+def mut_pwr(individual, problem: ProblemPwr, *args, shprob=0.5, addprob=0, delprob=0):
     if random.random() < shprob:
         individual,=mut_shuffle(individual, problem)
     if random.random() < addprob:

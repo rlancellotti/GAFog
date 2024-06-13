@@ -1,9 +1,14 @@
-import os.path
+import sqlite3
 import json
 import argparse
+import os.path
+
 import numpy as np
 
+from copy import deepcopy
+
 from .genproblem import get_problem
+from .analysis_db import create_schema, init_db, insert_experiment, print_table
 from ..opt_service.optimize import send_response, solve_problem, available_algorithms, algorithm_by_name
 # from ..ga.ga import solve_problem
 
@@ -20,6 +25,7 @@ config = {
         'response': "file://sample_output.json",
     },
     'optimizer':{
+        'type': 'GA',
         'cxpb': 0.5,
         'mutpb': 0.3,
         'mutation_params': {
@@ -139,9 +145,11 @@ def dump_result(res, fname):
             f.write(s + '\n')
 
 
-def run_experiment(par, values, nrun, config, mult, algorithm='GA', optimizer_param=None, optimizer_values=None, best_sol_dump=False):
+def run_experiment(par, values, nrun, config, mult, algorithm='GA', optimizer_param=None, optimizer_values=None, best_sol_dump=False) -> dict:
     """
-    the 'algorithm' parameter allows to pick which algorithm to experiment on
+    The 'algorithm' parameter allows to pick which algorithm to experiment on.
+    Returns a dictionary that keeps the results of each experiment with respects divided in two diffenrent collections,
+    one focused problem scenarios and the other optimizer scenarios.
     """
 
     def get_opt_val_key(val):
@@ -234,7 +242,124 @@ def run_experiment(par, values, nrun, config, mult, algorithm='GA', optimizer_pa
 
     return algo_results
 
+
+def run_experiment_db(par, values, 
+                      nrun, config, mult, 
+                      algorithm='GA', 
+                      optimizer_param=None, optimizer_values=None, 
+                      best_sol_dump=False,
+                      db_file='experiment_analysis/experiments.db'
+                      ) -> None:
+    """
+    Variant of 'run_experiment_db' that saves the results to database.
+    The 'algorithm' parameter allows to pick which algorithm to experiment on.
+    """
+
+    db_connection = sqlite3.connect(db_file)
+    db_schema = None
+    db_initialized = False
+
+    def get_opt_val_key(val):
+        return f'{optimizer_param}_{val}' if val is not None else 'default'
+        # return val
+
+    def get_prob_val_key(val):
+        return f'{par}_{val}'
+
+    problem_config = config['problem']
+    optimizer_config = config['optimizer']
+
+    problem_config['nchain'] = int(problem_config['nchain_fog'] * problem_config['nfog'])
+    orig_param = problem_config[par]
+
+    algo = algorithm_by_name(algorithm)  # The ability to iterate over algorithms has been removed due to the addition of optimizer_param
+
+    optimizer_values_iterator = optimizer_values if optimizer_values is not None else list([None])
+
+    print(f'\n{algo.name}')
+    
+    for val in values:
+        problem_config[par] = val
+        value_results = dict({
+            get_opt_val_key(opt_value): list() for opt_value in optimizer_values_iterator 
+        })
+
+        print(f'Experiment: {par}={val} ', end='', flush=True)
+
+        for run_idx in range(nrun):
+            print(f'(Run {run_idx}:', end='', flush=True)
+            problem = get_problem(problem_config)
+            problem.set_optimizer_parameters_dict(optimizer_config)
+
+            for opt_value in optimizer_values_iterator:
+                optimizer_string = f'{optimizer_param}{opt_value}_' if opt_value is not None else ''
+                problem_string = f'{par}{val if mult < 0 else int(val*mult)}'
+
+                fname = f'sample/output_' + problem_string + '_' + optimizer_string + f'run{run_idx}.json'
+
+                if os.path.isfile(fname):
+                    print('K', end='', flush=True)
+                else:
+                    print('R', end='', flush=True)
+                    problem.set_response_url(f'file://{fname}')
+                    if opt_value is not None:
+                        problem.set_optimizer_parameter(optimizer_param, opt_value)
+
+                    best_sol_file = None
+                    if best_sol_dump:
+                        best_sol_file = f'best_sol_dumps/sens_' + problem_string + '_' + optimizer_string + f'_run{run_idx}.csv'
+
+                    sol = solve_problem(problem, algo, filename_best_dump=best_sol_file)
+                    send_response(sol)
+                
+                res = parse_result(fname)
+                if res is not None:
+                    value_results[get_opt_val_key(opt_value)].append(res) 
+                    print('+', end='', flush=True)
+                else:
+                    print('-', end='', flush=True)
+            
+            print(')', end='', flush=True)
+            
+        for opt_value in optimizer_values_iterator:
+
+            opt_key = get_opt_val_key(opt_value)
+            
+            optimizer_config_scenario = deepcopy(optimizer_config)
+
+            if optimizer_param is not None:
+                optimizer_config_scenario[optimizer_param] = opt_value
+
+            experiment_res_scenario = collect_results(value_results[opt_key])
+
+            if not db_initialized:
+                db_schema = create_schema(problem_config=problem_config,
+                                          optimizer_config=optimizer_config_scenario,
+                                          experiment_result=experiment_res_scenario
+                                          )
+                
+                init_db(db_connection, db_schema)
+
+                db_initialized = True
+                print(f'\nDB INITIALIZED {db_file}')
+            
+            insert_experiment(db_connection, 
+                              problem_config=problem_config, 
+                              optimizer_config=optimizer_config_scenario, 
+                              experiment_result=experiment_res_scenario,
+                              schema=db_schema
+                              )
+        print('\n')
+        problem_config[par] = orig_param 
+        db_connection.commit()
+
+
 def dump_experiment(experiment_data, outfile):
+    """
+    Given the dictionary returned by 'run_experiment' it saves all the results to file, each file
+    represents a scenario, either a problem-scenario (the problem is fixed and the optimizer param variates)
+    or an optimizer-scenario (vice-versa).
+    """
     # Problem dump
     for algo in experiment_data.keys():
         # Problem data dump
@@ -265,14 +390,14 @@ if __name__ == "__main__":
         return value_type
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--output', help=f'Output file. Default sample/sens_[parameter]', type=str)
+    parser.add_argument('-o', '--output-database', help=f'Output database to store the experiments. Default "experiment_analysis/experiments.db"', type=str)
     parser.add_argument('-p', '--parameter', help=f'Problem parameter to test on', type=str, required=True)
     parser.add_argument('-v', '--values', help=f'List of values to assign to the parameter', nargs='+', required=True, type=str)
     parser.add_argument('-t', '--value-type', help=f'type of the values listed with the -v option', required=True, type=str)
     parser.add_argument('-a', '--algorithm', help='Optimization algorithm to test on', default='GA', type=str)
     parser.add_argument('-c', '--config', help="config file. Default use default config", required=True)
     parser.add_argument('-r', '--nrun', help="number of runs for each test configuration", default=DEFAULT_NRUN)
-    parser.add_argument('-m', '--mult', help="mult parameter", default=-1, type=int)  # Not 100% sure what this parameter is about
+    parser.add_argument('-m', '--mult', help="mult parameter", default=-1, type=int)
     parser.add_argument('-z', '--optimizator-parameter', help=f'Problem parameter to test on', type=str)
     parser.add_argument('-l', '--opt-values', help=f'List of values to assign to the optimizator parameter', nargs='+')
     parser.add_argument('-d', '--opt-value-type', help=f'type of the values listed with the -l option', type=str)
@@ -280,9 +405,9 @@ if __name__ == "__main__":
 
     args  = parser.parse_args()
     
-    output_file = args.output
-    if output_file is None:
-        output_file = f'sample/sens_{args.parameter}'
+    output_db = args.output_database
+    if output_db is None:
+        output_db = 'experiment_analysis/experiments.db'
 
     value_type = get_value_type(args.value_type)
 
@@ -294,17 +419,19 @@ if __name__ == "__main__":
     opt_value_type = get_value_type(args.opt_value_type)
 
     if opt_value_type is not None:
-        opt_values = [opt_value_type(val) for val in args.opt_values]
+        opt_values = [opt_value_type(val) for val in args.opt_values] if args.opt_values is not None else None
     else:
         opt_values = None
 
-    experiment_data = run_experiment(args.parameter, values, 
-                                     args.nrun,  
-                                     config, 
-                                     args.mult, 
-                                     args.algorithm, 
-                                     optimizer_param=args.optimizator_parameter, 
-                                     optimizer_values=opt_values,
-                                     best_sol_dump=args.track_best_sol
-                                     )
-    dump_experiment(experiment_data, output_file)
+    experiment_data = run_experiment_db(args.parameter, values, 
+                                        args.nrun,  
+                                        config, 
+                                        args.mult, 
+                                        args.algorithm, 
+                                        optimizer_param=args.optimizator_parameter, 
+                                        optimizer_values=opt_values,
+                                        best_sol_dump=args.track_best_sol,
+                                        db_file=output_db
+                                        )
+    
+    print_table(connection=sqlite3.connect(output_db), table_name='experiment')
