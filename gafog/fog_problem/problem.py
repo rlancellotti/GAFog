@@ -27,6 +27,34 @@ class Problem:
         self.compute_service_params()
         self.compute_chain_params()
 
+        self.optimizer_parameters = problem_dct['optimizer_parameters'] if 'optimizer_parameters' in problem_dct.keys() else dict()
+
+
+    def __access_opt_param(self, structured_key):
+        key_lvls = structured_key.split('.')
+
+        current_dict = self.optimizer_parameters
+        for lvl in key_lvls[:-1]:
+            current_dict = current_dict[lvl]
+
+        return current_dict, key_lvls[-1]
+
+
+    def get_optimizer_parameters_dict(self):
+        return self.optimizer_parameters
+    
+    def get_optimizer_parameter(self, structured_key):
+        accessed_dict, key = self.__access_opt_param(structured_key)
+
+        return accessed_dict.get(key, None)
+    
+    def set_optimizer_parameters_dict(self, parameters_dict):
+        self.optimizer_parameters = parameters_dict
+
+    def set_optimizer_parameter(self, structured_key, value):
+        accessed_dict, key = self.__access_opt_param(structured_key)
+        accessed_dict[key] = value
+
     def handle_network(self, problem_dct: dict):
         if 'network' in problem_dct:
             self.network_is_fake = False
@@ -211,6 +239,9 @@ class Problem:
 
     def get_response_url(self):
         return self.response
+    
+    def set_response_url(self, url):
+        self.response = url
 
     def begin_solution(self):
         """ Starts time, when a solver is 'activated'. Is used to calculate the execution time. """

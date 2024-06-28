@@ -18,8 +18,12 @@ def init_ga(problem: ProblemPwr):
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
     toolbox.register("evaluate", obj_func, problem=problem)
-    toolbox.register("mate", cx_solution_pwr, problem=problem)
-    toolbox.register("mutate", mut_pwr, problem=problem, shprob=0.5, addprob=0.0, delprob=0.0)
+
+    crossover_params = _cx_params if (_cx_params := problem.get_optimizer_parameter('crossover_params')) is not None else dict()
+    toolbox.register("mate", cx_solution_pwr, problem=problem, **crossover_params)
+    mutation_params = _mut_params if (_mut_params := problem.get_optimizer_parameter('mutation_params')) is not None else dict()
+    toolbox.register("mutate", mut_pwr, problem=problem, **mutation_params)
+    
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
@@ -227,13 +231,20 @@ def mut_del_fog(individual, indpb, problem: ProblemPwr):
         chains.pop(i)
     return individual,    
 
+
 def mut_add_fog(individual, indpb, problem: ProblemPwr):
     pass
     # find list of off services
     # decide which fog to add
     # populate the fog
 
-def mut_pwr(individual, problem: ProblemPwr, shprob=0.2, addprob=0, delprob=0):
+'''
+NOTE: Adding a *args argument before the keyword arguments is essential in order
+to ensure the correct functioning of some of the operations performed by
+problem_gen/analysis_db.py (this refers to all mutation and crossover functions)
+'''
+
+def mut_pwr(individual, problem: ProblemPwr, *args, shprob=0.5, addprob=0, delprob=0):
     if random.random() < shprob:
         individual,=mut_shuffle(individual, problem)
     if random.random() < addprob:

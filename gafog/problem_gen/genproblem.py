@@ -3,11 +3,12 @@ import argparse
 import numpy
 import json
 
-from ..fog_problem.problem import Problem
+from ..fog_problem.problem import Problem, load_problem
 from ..opt_service.optimize import ( solve_problem, send_response, algorithm_by_name)
 
 
 SRVCV = 1.0
+DEFAULT_PROBLEM_TYPE = 'performance'
 
 
 def get_net_id(i, j, n):
@@ -115,9 +116,14 @@ def get_microservice(config):
     return microservice
 
 
+def get_problem_type(config):
+    return config['type'] if 'type' in config.keys() else DEFAULT_PROBLEM_TYPE
+
+
 def get_problem(config):
     if bool(config['enable_network']):
         rv = {
+            'type': get_problem_type(config),
             'response': config['response'],
             'fog': get_fog(config),
             'sensor': get_sensor(config),
@@ -128,13 +134,15 @@ def get_problem(config):
 
     else:
         rv = {
+            'type': get_problem_type(config),
             'response': config['response'],
             'fog': get_fog(config),
             'sensor': get_sensor(config),
             'servicechain': get_chain(config),
             'microservice': get_microservice(config),
+            
             }
-    return Problem(rv)
+    return load_problem(rv)
 
 
 if __name__ == '__main__':

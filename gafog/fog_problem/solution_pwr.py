@@ -77,6 +77,14 @@ class SolutionPwr(Solution):
         tot_servtime=sum(self.problem.get_microservice(item)['meanserv'] for item in self.problem.get_microservice_list())
         return K * tot_servtime
 
+    def compute_power_consumption(self):
+        pwr_tot = 0.0
+        for fidx in range(self.nf):
+            f = self.fog[fidx]
+            #prevfog = None
+            pwr_tot += 1 + f['rho'] if f['rho']>0 else 0
+        return pwr_tot
+
     def obj_func(self):
         """ 
             Calculates the objective function.
@@ -84,16 +92,16 @@ class SolutionPwr(Solution):
         """
         #FIXME: must add penaties!!!
         tr_tot, pwr_tot = 0.0, 0.0
-        if not self.resptimes:
-            self.resptimes = self.compute_performance()
-        for sc in self.resptimes:
-            tr_tot += (self.resptimes[sc]['resptime'] * self.problem.servicechain[sc]['weight'])
+        tr_tot = self.compute_tr()
         # FIXME: must compute power consumption for each fog!
-        for fidx in range(self.nf):
-            f = self.fog[fidx]
-            #prevfog = None
-            pwr_tot += 1 + f['rho'] if f['rho']>0 else 0
+        pwr_tot = self.compute_power_consumption()
+        
         return (pwr_tot + self.get_SLA_penalty() + self.get_overload_penalty()) * self.get_pwr_obj_scale() + tr_tot
+    
+    def get_obj_func_components(self):
+        components = super().get_obj_func_components()
+        components['power_consumption'] = self.compute_power_consumption()
+        return components
 
     def dump_solution(self):
         """ Returns a dict with all the solution params. Is used to dump the solution on a json file. """

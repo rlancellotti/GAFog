@@ -8,6 +8,7 @@ from collections import namedtuple
 from deap import base, creator, tools, algorithms
 
 from ..fog_problem.problem import Problem, load_problem
+from ..fog_problem.problem_perf import ProblemPerf
 from ..fog_problem.solution import Solution
 
 numGen = 600    # number fo generations used in the GA
@@ -26,14 +27,19 @@ def load_individuals(creator, problem: Problem):
         individual.append(random.randint(0, problem.get_nfog() - 1))
     return creator(individual)
 
-def mut_uniform_fog(individual, indpb, problem: Problem):
+'''
+NOTE: Adding a *args argument before the keyword arguments is essential in order
+to ensure the correct functioning of some of the operations performed by
+problem_gen/analysis_db.py (this refers to all mutation and crossover functions)
+'''
+def mut_uniform_fog(individual, problem: Problem, *args, indpb=0.05):
     for i in range(len(individual)):
         if random.random() < indpb:
             individual[i] = random.randint(0, problem.get_nfog() - 1)
     return (individual,)
 
 
-def cx_uniform_fog(ind1, ind2, indpb, problem: Problem):
+def cx_uniform_fog(ind1, ind2, problem: Problem, *args, indpb=0.5):
     size = min(len(ind1), len(ind2))
     for i in range(size):
         if random.random() < indpb:
@@ -41,7 +47,7 @@ def cx_uniform_fog(ind1, ind2, indpb, problem: Problem):
     return ind1, ind2
 
 
-def init_ga(problem):
+def init_ga(problem: ProblemPerf):
     # Initialization
     toolbox = base.Toolbox()
     try:
@@ -55,8 +61,12 @@ def init_ga(problem):
     toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 
     toolbox.register("evaluate", obj_func, problem=problem)
-    toolbox.register("mate", cx_uniform_fog, indpb=0.5, problem=problem)
-    toolbox.register("mutate", mut_uniform_fog, indpb=0.05, problem=problem)
+
+    crossover_params = _cx_params if (_cx_params := problem.get_optimizer_parameter('crossover_params') is not None) else dict()
+    toolbox.register("mate", cx_uniform_fog, problem=problem, **crossover_params)
+    mutation_params = _mut_params if (_mut_params := problem.get_optimizer_parameter('mutation_params') is not None) else dict()
+    toolbox.register("mutate", mut_uniform_fog, problem=problem, **mutation_params)
+    
     toolbox.register("select", tools.selTournament, tournsize=7)
     return toolbox
 
