@@ -12,7 +12,7 @@ from .analysis_db import create_schema, init_db, insert_experiment, print_table
 from ..opt_service.optimize import send_response, solve_problem, available_algorithms, algorithm_by_name
 # from ..ga.ga import solve_problem
 
-config = {
+config_example = {
     'problem': {
         'type': 'power',
         'nchain_fog': 0.4,
@@ -92,6 +92,10 @@ def generations(data):
         return data['extra']['conv_gen']
     else:
         return 0.0
+    
+def obj_fun_comp_convergence(data):
+    if 'components_conv' in data['extra']:
+        return {key + '_convgen': val for key, val in data['extra']['components_conv'].items()}
 
 def parse_result(fname):
 
@@ -104,6 +108,7 @@ def parse_result(fname):
             h = nhop(data)
             gt = gatime(data)
             gen = generations(data)
+            obj_fun_component_conv = obj_fun_comp_convergence(data)
 
             return {
                     'jain': j,
@@ -112,7 +117,7 @@ def parse_result(fname):
                     'nhop': h,
                     'deltatime': gt,
                     'convgen': gen,
-                    }     
+                    } | obj_fun_component_conv
 
 def collect_results(res):
     rv = {}
@@ -396,7 +401,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--value-type', help=f'type of the values listed with the -v option', required=True, type=str)
     parser.add_argument('-a', '--algorithm', help='Optimization algorithm to test on', default='GA', type=str)
     parser.add_argument('-c', '--config', help="config file. Default use default config", required=True)
-    parser.add_argument('-r', '--nrun', help="number of runs for each test configuration", default=DEFAULT_NRUN)
+    parser.add_argument('-r', '--nrun', help="number of runs for each test configuration", default=DEFAULT_NRUN, type=int)
     parser.add_argument('-m', '--mult', help="mult parameter", default=-1, type=int)
     parser.add_argument('-z', '--optimizator-parameter', help=f'Problem parameter to test on', type=str)
     parser.add_argument('-l', '--opt-values', help=f'List of values to assign to the optimizator parameter', nargs='+')
@@ -422,6 +427,8 @@ if __name__ == "__main__":
         opt_values = [opt_value_type(val) for val in args.opt_values] if args.opt_values is not None else None
     else:
         opt_values = None
+
+    config = json.loads(open(args.config, 'r').read())
 
     experiment_data = run_experiment_db(args.parameter, values, 
                                         args.nrun,  
