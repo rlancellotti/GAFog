@@ -15,6 +15,7 @@ requests = "^2.28.1"
 graphviz = "^0.20.1"
 neato = "^1.0.0"
 py-gnuplot = "^1.1.8"
+seaborn = "^0.13.2"
 
 [tool.poetry.dev-dependencies]
 

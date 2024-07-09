@@ -93,6 +93,12 @@ def generations(data):
     else:
         return 0.0
     
+def obj_fun_comp_score(data):
+    return data['extra']['obj_func_components']
+
+def obj_fun_score(data):
+    return data['extra']['obj_func']
+    
 def obj_fun_comp_convergence(data):
     if 'components_conv' in data['extra']:
         return {key + '_convgen': val for key, val in data['extra']['components_conv'].items()}
@@ -108,7 +114,9 @@ def parse_result(fname):
             h = nhop(data)
             gt = gatime(data)
             gen = generations(data)
-            obj_fun_component_conv = obj_fun_comp_convergence(data)
+            obj_fun = obj_fun_score(data)
+            obj_fun_components = obj_fun_comp_score(data)
+            obj_fun_components_conv = obj_fun_comp_convergence(data)
 
             return {
                     'jain': j,
@@ -117,7 +125,8 @@ def parse_result(fname):
                     'nhop': h,
                     'deltatime': gt,
                     'convgen': gen,
-                    } | obj_fun_component_conv
+                    'obj_fun': obj_fun,
+                    } | obj_fun_components | obj_fun_components_conv
 
 def collect_results(res):
     rv = {}
@@ -256,7 +265,7 @@ def run_experiment_db(par, values,
                       db_file='experiment_analysis/experiments.db'
                       ) -> None:
     """
-    Variant of 'run_experiment_db' that saves the results to database.
+    Variant of 'run_experiment' that saves the results to database.
     The 'algorithm' parameter allows to pick which algorithm to experiment on.
     """
 

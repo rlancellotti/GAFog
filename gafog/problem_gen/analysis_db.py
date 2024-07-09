@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 from ..ga import ga_perf, ga_pwr
 
+
 PROBLEM_CONF_COLLISION_PREFIX = 'problem_'
 OPTIMIZER_CONF_COLLISION_PREFIX = 'optimizer_'
 
@@ -267,6 +268,20 @@ def print_table(connection: sqlite3.Connection, table_name: str):
 
 
 def get_experiments_by_scenario(connection: sqlite3.Connection, scenario_config: dict):
+    
+    def get_value_str(value):
+        ret = ''
+        val_t = type(value)
+
+        if val_t is str:
+            ret = f"'{value}'"
+        elif val_t is bool:
+            ret = str(int(value))
+        else:
+            ret = str(value)
+        
+        return ret
+
     cursor = connection.cursor()
 
     flattened_problem_scenario = _flatten_multilevel_config(scenario_config.get('problem', None))
@@ -279,7 +294,7 @@ def get_experiments_by_scenario(connection: sqlite3.Connection, scenario_config:
                                                                                          )
     flattened_scenario_config = flattened_problem_scenario | flattened_optimizer_scenario
     
-    where_clause = ' AND '.join([f'{key} = {value}' for key, value in flattened_scenario_config.items()])
+    where_clause = ' AND '.join([f'{key} = {get_value_str(value)}' for key, value in flattened_scenario_config.items()])
 
     query = f"""SELECT * 
                 FROM experiment
@@ -288,4 +303,27 @@ def get_experiments_by_scenario(connection: sqlite3.Connection, scenario_config:
 
     cursor.execute(query)
 
-    return cursor.fetchall()
+    ret = cursor.fetchall()
+
+    cursor.close()
+
+    return ret
+
+
+def _get_table_sqlite_type_schema(connection:  sqlite3.Connection, tablename: str):
+    cursor = connection.cursor()
+
+    cursor.execute(f"PRAGMA table_info({tablename});")
+
+    ret = cursor.fetchall()
+
+    cursor.close()
+
+    return ret
+
+
+def get_table_column_names(connection: sqlite3.Connection, tablename: str):
+    sqlite_schema = _get_table_sqlite_type_schema(connection, tablename)
+
+    return [data[1] for data in sqlite_schema]
+
