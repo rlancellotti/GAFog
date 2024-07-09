@@ -1,6 +1,8 @@
 import sqlite3
 import json
 import argparse
+import threading
+import multiprocessing as mp
 import os.path
 
 import numpy as np
@@ -159,105 +161,70 @@ def dump_result(res, fname):
             f.write(s + '\n')
 
 
-def run_experiment(par, values, nrun, config, mult, algorithm='GA', optimizer_param=None, optimizer_values=None, best_sol_dump=False) -> dict:
+def get_opt_val_key(optimizer_param, val):
+    return f'{optimizer_param}_{val}' if val is not None else 'default'
+    # return val
+
+def get_prob_val_key(problem_par, val):
+    return f'{problem_par}_{val}'
+
+
+def _processWorker_experiment_run(run_idx, 
+                                  problem_par, prob_val, 
+                                  problem_config, optimizer_config, 
+                                  optimizer_param,
+                                  algo, mult, 
+                                  best_sol_dump, 
+                                  optimizer_values_iterator
+                                  ):
+    
     """
-    The 'algorithm' parameter allows to pick which algorithm to experiment on.
-    Returns a dictionary that keeps the results of each experiment with respects divided in two diffenrent collections,
-    one focused problem scenarios and the other optimizer scenarios.
+    Task body for every process worker. It runs all necessary experiments for a single run (it takes into consideration each 
+    optimizer scenario specified)
     """
 
-    def get_opt_val_key(val):
-        return f'{optimizer_param}_{val}' if val is not None else 'default'
-        # return val
+    print(f'SCENARIO {problem_par}:{prob_val} {optimizer_param}{optimizer_values_iterator} - run {run_idx} - STARTED', flush=True)
+    problem = get_problem(problem_config)
+    problem.set_optimizer_parameters_dict(optimizer_config)
+    local_value_results = dict({
+        get_opt_val_key(optimizer_param, opt_value): list() for opt_value in optimizer_values_iterator 
+    })
 
-    def get_prob_val_key(val):
-        return f'{par}_{val}'
+    for opt_value in optimizer_values_iterator:
+        # Fukebane creation
+        optimizer_string = f'{optimizer_param}{opt_value}_' if opt_value is not None else ''
+        problem_string = f'{problem_par}{prob_val if mult < 0 else int(prob_val*mult)}'
 
-    problem_config = config['problem']
-    optimizer_config = config['optimizer']
+        fname = f'sample/output_' + problem_string + '_' + optimizer_string + f'run{run_idx}.json'
 
-    problem_config['nchain'] = int(problem_config['nchain_fog'] * problem_config['nfog'])
-    orig_param = problem_config[par]
+        # Run outcome string
+        result_str = f'Run {run_idx} - {problem_par}: {prob_val} - {optimizer_param}: {opt_value} - '
 
-    algo = algorithm_by_name(algorithm)  # The ability to iterate over algorithms has been removed due to the addition of optimizer_param
-
-    optimizer_values_iterator = optimizer_values if optimizer_values is not None else list([None])
-
-    algo_results = dict()
-
-    
-    print(f'\n{algo.name}')
-    results = {
-        'problem_val': dict({get_opt_val_key(opt_value): list() for opt_value in optimizer_values_iterator}),
-        'optimizer_val': dict({get_prob_val_key(prob_value): list() for prob_value in values}
-                                ) if optimizer_param is not None else None
-    }
-    
-    
-    for val in values:
-
-        value_results = dict({
-            get_opt_val_key(opt_value): list() for opt_value in optimizer_values_iterator 
-        })
-
-        print(f'Experiment: {par}={val} ', end='', flush=True)
-
-        for run_idx in range(nrun):
-            print(f'(Run {run_idx}:', end='', flush=True)
-            problem_config[par] = val
-            problem = get_problem(problem_config)
-            problem.set_optimizer_parameters_dict(optimizer_config)
-
-            for opt_value in optimizer_values_iterator:
-                optimizer_string = f'{optimizer_param}{opt_value}_' if opt_value is not None else ''
-                problem_string = f'{par}{val if mult < 0 else int(val*mult)}'
-
-                fname = f'sample/output_' + problem_string + '_' + optimizer_string + f'run{run_idx}.json'
-
-                if os.path.isfile(fname):
-                    print('K', end='', flush=True)
-                else:
-                    print('R', end='', flush=True)
-                    problem.set_response_url(f'file://{fname}')
-                    if opt_value is not None:
-                        problem.set_optimizer_parameter(optimizer_param, opt_value)
-
-                    best_sol_file = None
-                    if best_sol_dump:
-                        best_sol_file = f'best_sol_dumps/sens_' + problem_string + '_' + optimizer_string + f'_run{run_idx}.csv'
-
-                    sol = solve_problem(problem, algo, filename_best_dump=best_sol_file)
-                    send_response(sol)
-                
-                res = parse_result(fname)
-                if res is not None:
-                    value_results[get_opt_val_key(opt_value)].append(res) 
-                    print('+', end='', flush=True)
-                else:
-                    print('-', end='', flush=True)
-            
-            print(')', end='', flush=True)
-            
-        for opt_value in optimizer_values_iterator:
-
-            opt_key = get_opt_val_key(opt_value)
-
-
-            results['problem_val'][opt_key].append({par: val} | collect_results(value_results[opt_key]))
-
+        if os.path.isfile(fname):
+            result_str += 'CAHCED - '
+        else:
+            problem.set_response_url(f'file://{fname}')
             if opt_value is not None:
-                results['optimizer_val'][get_prob_val_key(val)].append({optimizer_param: opt_value} | collect_results(value_results[opt_key]))
+                problem.set_optimizer_parameter(optimizer_param, opt_value)
 
-            print('')
+            best_sol_file = None
+            if best_sol_dump:
+                best_sol_file = f'best_sol_dumps/sens_' + problem_string + '_' + optimizer_string + f'_run{run_idx}.csv'
+
+            sol = solve_problem(problem, algo, filename_best_dump=best_sol_file)
+            send_response(sol)
         
-        algo_results[algo.name] = results
+        res = parse_result(fname)
+        if res is not None:
+            local_value_results[get_opt_val_key(optimizer_param, opt_value)].append(res) 
+            print(result_str + 'SUCCESS', flush=True)
+        else:
+            print(result_str + 'FAILED', flush=True)
+    
+    return local_value_results
 
-    problem_config[par] = orig_param
 
-    return algo_results
-
-
-def run_experiment_db(par, values, 
+def run_experiment_db(problem_par, problem_values, 
                       nrun, config, mult, 
                       algorithm='GA', 
                       optimizer_param=None, optimizer_values=None, 
@@ -269,75 +236,61 @@ def run_experiment_db(par, values,
     The 'algorithm' parameter allows to pick which algorithm to experiment on.
     """
 
-    db_connection = sqlite3.connect(db_file)
     db_schema = None
     db_initialized = False
-
-    def get_opt_val_key(val):
-        return f'{optimizer_param}_{val}' if val is not None else 'default'
-        # return val
-
-    def get_prob_val_key(val):
-        return f'{par}_{val}'
+    database_lock = threading.Lock()
 
     problem_config = config['problem']
     optimizer_config = config['optimizer']
 
     problem_config['nchain'] = int(problem_config['nchain_fog'] * problem_config['nfog'])
-    orig_param = problem_config[par]
 
     algo = algorithm_by_name(algorithm)  # The ability to iterate over algorithms has been removed due to the addition of optimizer_param
 
     optimizer_values_iterator = optimizer_values if optimizer_values is not None else list([None])
 
-    print(f'\n{algo.name}')
-    
-    for val in values:
-        problem_config[par] = val
+    def _aggregate_local_results(dict1: dict, dict2: dict):
+        ret = dict()
+
+        for key in dict1.keys() | dict2.keys():
+            ret[key] = dict1.get(key, []) + dict2.get(key, [])
+        return ret
+
+
+    def _threadWorker_problem_scenario(problem_conf: dict, problem_par: str, problem_val, pool, db_file: str):
+        """
+        Task body for every thread worker. Its duty is to feed the process pool with experiment run instances,
+        then it aggregates and inserts the results into the database
+        """
+
+        # These database variables are shared between threads
+        nonlocal db_schema
+        nonlocal db_initialized
+        nonlocal database_lock
+
+        problem_conf_scenario = deepcopy(problem_conf)
+        problem_conf_scenario[problem_par] = problem_val
         value_results = dict({
-            get_opt_val_key(opt_value): list() for opt_value in optimizer_values_iterator 
+            get_opt_val_key(optimizer_param, opt_value): list() for opt_value in optimizer_values_iterator 
         })
 
-        print(f'Experiment: {par}={val} ', end='', flush=True)
+        processes_args = [(i, 
+                           problem_par, problem_val, 
+                           problem_conf_scenario, optimizer_config, 
+                           optimizer_param, 
+                           algo, mult,
+                           best_sol_dump,
+                           optimizer_values_iterator
+                           ) for i in range(nrun)]
+        
+        local_results = pool.starmap(_processWorker_experiment_run, processes_args)
 
-        for run_idx in range(nrun):
-            print(f'(Run {run_idx}:', end='', flush=True)
-            problem = get_problem(problem_config)
-            problem.set_optimizer_parameters_dict(optimizer_config)
+        for loc_res in local_results:
+            value_results = _aggregate_local_results(value_results, loc_res)
 
-            for opt_value in optimizer_values_iterator:
-                optimizer_string = f'{optimizer_param}{opt_value}_' if opt_value is not None else ''
-                problem_string = f'{par}{val if mult < 0 else int(val*mult)}'
-
-                fname = f'sample/output_' + problem_string + '_' + optimizer_string + f'run{run_idx}.json'
-
-                if os.path.isfile(fname):
-                    print('K', end='', flush=True)
-                else:
-                    print('R', end='', flush=True)
-                    problem.set_response_url(f'file://{fname}')
-                    if opt_value is not None:
-                        problem.set_optimizer_parameter(optimizer_param, opt_value)
-
-                    best_sol_file = None
-                    if best_sol_dump:
-                        best_sol_file = f'best_sol_dumps/sens_' + problem_string + '_' + optimizer_string + f'_run{run_idx}.csv'
-
-                    sol = solve_problem(problem, algo, filename_best_dump=best_sol_file)
-                    send_response(sol)
-                
-                res = parse_result(fname)
-                if res is not None:
-                    value_results[get_opt_val_key(opt_value)].append(res) 
-                    print('+', end='', flush=True)
-                else:
-                    print('-', end='', flush=True)
-            
-            print(')', end='', flush=True)
-            
         for opt_value in optimizer_values_iterator:
 
-            opt_key = get_opt_val_key(opt_value)
+            opt_key = get_opt_val_key(optimizer_param, opt_value)
             
             optimizer_config_scenario = deepcopy(optimizer_config)
 
@@ -346,26 +299,44 @@ def run_experiment_db(par, values,
 
             experiment_res_scenario = collect_results(value_results[opt_key])
 
-            if not db_initialized:
-                db_schema = create_schema(problem_config=problem_config,
-                                          optimizer_config=optimizer_config_scenario,
-                                          experiment_result=experiment_res_scenario
-                                          )
-                
-                init_db(db_connection, db_schema)
+            with database_lock:  # Using a lock to make sure the db transaction don't interfere with each other
+                db_connection = sqlite3.connect(db_file)
 
-                db_initialized = True
-                print(f'\nDB INITIALIZED {db_file}')
-            
-            insert_experiment(db_connection, 
-                              problem_config=problem_config, 
-                              optimizer_config=optimizer_config_scenario, 
-                              experiment_result=experiment_res_scenario,
-                              schema=db_schema
-                              )
-        print('\n')
-        problem_config[par] = orig_param 
-        db_connection.commit()
+                if not db_initialized:
+                    db_schema = create_schema(problem_config=problem_conf_scenario,
+                                            optimizer_config=optimizer_config_scenario,
+                                            experiment_result=experiment_res_scenario
+                                            )
+                    
+                    init_db(db_connection, db_schema)
+
+                    db_initialized = True
+                    print(f'\nDB INITIALIZED {db_file}')
+                
+                insert_experiment(db_connection, 
+                                problem_config=problem_conf_scenario, 
+                                optimizer_config=optimizer_config_scenario, 
+                                experiment_result=experiment_res_scenario,
+                                schema=db_schema
+                                )
+                db_connection.commit()
+                db_connection.close()
+    
+
+    print(f'\n{algo.name}')
+    
+    threads = list[threading.Thread]()  # List to keep track of all the threads created
+    multiproc_pool = mp.Pool(processes=mp.cpu_count())  # Pool of all available worker processes (one process for each CPU croe)
+    
+    for val in problem_values:  # Creating and launching a thread for each problem scenario
+        scenario_thread = threading.Thread(target=_threadWorker_problem_scenario, args=(problem_config, problem_par, val, multiproc_pool, db_file))
+        threads.append(scenario_thread)
+        scenario_thread.start()
+    
+    for thread in threads:  # Barrier to make sure every thread of the pool finished its work
+        thread.join()
+    
+    
 
 
 def dump_experiment(experiment_data, outfile):
