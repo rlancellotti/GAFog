@@ -30,10 +30,10 @@ def init_ga(problem: Problem):
         return initga(problem)
 
 
-def get_convergence(log, min_obj, eps=0.01):
+def get_convergence(log_fitness, min_obj, eps=0.01):
     # gen=log.select("gen")
     # stds = log.select("std")
-    mins = log.select("min")
+    mins = log_fitness.select("min")
     convgen = -1
     for i in range(len(mins)):
         if (mins[i] / min_obj) - 1.0 < eps:
@@ -42,6 +42,35 @@ def get_convergence(log, min_obj, eps=0.01):
             break
     # print(convgen)
     return convgen
+
+def get_obj_components_convergence(log_solution, min_obj_components, eps=0.01):
+
+    def comp_converged(component_val, component_min, eps):
+        ret = False
+
+        if component_min == 0 and component_val == 0:
+            ret = True
+        elif component_min != 0:
+            ret = ((abs(component_val - component_min)) / (component_min)) < eps
+        return ret
+
+    generations_best_sol = log_solution.select('best_individual')
+    component_convergence = dict({
+        key: None for key in min_obj_components.keys()
+    })
+
+    for i in range(len(generations_best_sol)):
+        sol_components = generations_best_sol[i].get_obj_func_components()
+
+        for component in component_convergence.keys():
+            if (component_convergence[component] is None 
+                and comp_converged(sol_components[component], min_obj_components[component], eps)):
+                component_convergence[component] = i
+
+        if numpy.all([convergence_it is not None for convergence_it in component_convergence.values()]):
+            break
+
+    return component_convergence
 
 
 def solve_ga_simple(toolbox, cxpb, mutpb, problem:Problem, filename_best_dump=None, delimiter='\t'):
@@ -91,7 +120,9 @@ def solve_ga_simple(toolbox, cxpb, mutpb, problem:Problem, filename_best_dump=No
                                     stats=multi_statistics, halloffame=hof, verbose=False)
     best = problem.get_solution(hof[0])
     convergence = get_convergence(log.chapters['fitness'], best.obj_func())
+    components_convergence = get_obj_components_convergence(log.chapters['solution'], best.get_obj_func_components())
     best.set_extra_param('conv_gen', convergence)
+    best.set_extra_param('components_conv', components_convergence)
     best.set_extra_param('max_gen', numGen)
     best.set_extra_param('population', numPop)
     # gen=log.select("gen")

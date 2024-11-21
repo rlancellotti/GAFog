@@ -54,12 +54,13 @@ class SolutionPwr(Solution):
             This should be called before compute_fog_performance
         """
 
-        if self.fog[fidx] is not None and 'rho' not in self.fog[fidx].keys():
+        fog_node = self.fog[fidx]
+
+        if fog_node is not None and 'rho' not in fog_node.keys():
             return
-        if self.fog[fidx]['rho'] == 0:
-            self.fog[fidx]['power']=0
-        else:
-            self.fog[fidx]['power']=1
+        
+        fog_node['power'] = 1 + fog_node['rho'] if fog_node['rho']>0 else 0
+  
         
     def compute_fog_status(self):
         """ 
@@ -82,7 +83,7 @@ class SolutionPwr(Solution):
         for fidx in range(self.nf):
             f = self.fog[fidx]
             #prevfog = None
-            pwr_tot += 1 + f['rho'] if f['rho']>0 else 0
+            pwr_tot += f['power']
         return pwr_tot
 
     def obj_func(self):
@@ -108,7 +109,8 @@ class SolutionPwr(Solution):
 
         rv=super().dump_solution()
         for f in self.fog:
-            rv['fog'][f['name']]['power'] = 1 if rv['fog'][f['name']]['rho'] > 0 else 0
+            rv['fog'][f['name']]['power'] = f['power']
+        rv['extra']['obj_func_components'] = self.get_obj_func_components() 
         return rv
 
 def normalize_individual(ind, problem: Problem):

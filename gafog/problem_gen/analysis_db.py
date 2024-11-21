@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 from ..ga import ga_perf, ga_pwr
 
+
 PROBLEM_CONF_COLLISION_PREFIX = 'problem_'
 OPTIMIZER_CONF_COLLISION_PREFIX = 'optimizer_'
 
@@ -88,7 +89,7 @@ def _flatten_multilevel_config(config: dict, value_modifier=lambda x:x, prefix: 
         return config_schema
 
 
-def create_schema(problem_config, optimizer_config, experiment_result):
+def create_schema(problem_config: dict, optimizer_config:dict, experiment_result: dict):
     """
     Generates a database table schema using an instance of problem config,
     optimizer config and the results of a specific experiment
@@ -147,7 +148,7 @@ def create_schema(problem_config, optimizer_config, experiment_result):
     return to_ordered_dict(problem_columns) | to_ordered_dict(optimizer_columns) | to_ordered_dict(result_columns)
 
 
-def _create_columns_str(schema, separator=', '):
+def _create_columns_str(schema: dict, separator=', '):
     """
     Generates the columns string used to create a table through SQL queries
     """
@@ -176,7 +177,7 @@ def _create_columns_str(schema, separator=', '):
     return columns_str[:-2]
 
 
-def init_db(connection: sqlite3.Connection, schema):
+def init_db(connection: sqlite3.Connection, schema: dict):
     """
     Initializes the database by creating (if not present) the necessary "experiment" table
     """
@@ -196,7 +197,7 @@ def init_db(connection: sqlite3.Connection, schema):
     cursor.close()
 
 
-def insert_experiment(connection: sqlite3.Connection, problem_config, optimizer_config, experiment_result, schema):
+def insert_experiment(connection: sqlite3.Connection, problem_config: dict, optimizer_config: dict, experiment_result: dict, schema: dict):
     """
     Inserts the results of an experiment and the respective configuration into 
     the experiment table in the database
@@ -264,3 +265,65 @@ def print_table(connection: sqlite3.Connection, table_name: str):
         print('\n')
 
     cursor.close()
+
+
+def get_experiments_by_scenario(connection: sqlite3.Connection, scenario_config: dict):
+    
+    def get_value_str(value):
+        ret = ''
+        val_t = type(value)
+
+        if val_t is str:
+            ret = f"'{value}'"
+        elif val_t is bool:
+            ret = str(int(value))
+        else:
+            ret = str(value)
+        
+        return ret
+
+    cursor = connection.cursor()
+
+    flattened_problem_scenario = _flatten_multilevel_config(scenario_config.get('problem', None))
+    flattened_optimizer_scenario = _flatten_multilevel_config(scenario_config.get('optimizer', None))
+
+    flattened_problem_scenario, flattened_optimizer_scenario = _handle_config_collisions(flattened_problem_scenario, 
+                                                                                         flattened_optimizer_scenario, 
+                                                                                         PROBLEM_CONF_COLLISION_PREFIX, 
+                                                                                         OPTIMIZER_CONF_COLLISION_PREFIX
+                                                                                         )
+    flattened_scenario_config = flattened_problem_scenario | flattened_optimizer_scenario
+    
+    where_clause = ' AND '.join([f'{key} = {get_value_str(value)}' for key, value in flattened_scenario_config.items()])
+
+    query = f"""SELECT * 
+                FROM experiment
+                WHERE {where_clause}
+    """
+
+    cursor.execute(query)
+
+    ret = cursor.fetchall()
+
+    cursor.close()
+
+    return ret
+
+
+def _get_table_sqlite_type_schema(connection:  sqlite3.Connection, tablename: str):
+    cursor = connection.cursor()
+
+    cursor.execute(f"PRAGMA table_info({tablename});")
+
+    ret = cursor.fetchall()
+
+    cursor.close()
+
+    return ret
+
+
+def get_table_column_names(connection: sqlite3.Connection, tablename: str):
+    sqlite_schema = _get_table_sqlite_type_schema(connection, tablename)
+
+    return [data[1] for data in sqlite_schema]
+
